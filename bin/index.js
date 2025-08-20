@@ -3,14 +3,14 @@
 import chalk from "chalk";
 import intro from "../intro.js";
 import inquirer from "inquirer";
+import inputData from "../file-data.js";
 import ora from 'ora';
 import makeFile from "../make-file.js";
-let status = true
 
 async function main() {
     await intro();
 
-    while (status) {
+    while (true) {
         const file = await inquirer.prompt([
             {
                 type: 'list',
@@ -25,10 +25,11 @@ async function main() {
             },
         ]);
 
+        const data = await inputData(chalk.blue("Input data for your file:\n"));
+
         const spinner = ora({ text: 'making file', color: 'cyan' }).start();
         
-        //TODO make input text for user data
-        const result = await makeFile('Hello World', file.extension, file.fileName);
+        const result = await makeFile(data, file.extension, file.fileName);
 
         if(!result) {
             spinner.fail("Fail to make file");
