@@ -6,13 +6,16 @@
   "author": "aldoger",
   "type": "module",
   "main": "index.js",
+  "bin": {
+    "filemake": "./bin/index.js"
+  },
   "scripts": {
-    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "chalk": "^5.6.0",
     "figlet": "^1.8.2",
-    "inquirer": "^12.9.3"
+    "inquirer": "^12.9.3",
+    "ora": "^8.2.0"
   }
 }
