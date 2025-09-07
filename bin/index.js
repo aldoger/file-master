@@ -10,6 +10,7 @@ const enumOp = {
     MAKE: 'make file',
     READ: 'read file',
     MOVE: 'move file',
+    EDIT: 'edit file',
     COPY: 'copy paste file'
 };
 
@@ -24,7 +25,7 @@ async function main() {
                 type: 'list',
                 name: 'operation',
                 message: 'Choose operation',
-                choices: [enumOp.MAKE, enumOp.READ, enumOp.MOVE]
+                choices: [enumOp.MAKE, enumOp.READ, enumOp.MOVE, enumOp.EDIT, enumOp.COPY]
             }
         ]);
 
@@ -48,11 +49,6 @@ async function main() {
                     message: 'input data: ',
                 }
             ]);
-
-            if(file.extension == undefined || file.fileData == undefined || file.fileName == undefined){
-                console.info("Operation stopped");
-                continue;
-            }
 
             const spinner = ora({ text: 'making file', color: 'cyan' }).start();
             
@@ -95,7 +91,7 @@ async function main() {
             ]);
             console.info(chalk.green(`you choose ${chooseDir.directory}`));
         }else if(chooseOp.operation == enumOp.COPY){
-
+            console.info(chalk.red('Operation is still on development'));
         }else{
             console.info(chalk.red('Operation is still on development'));
         }
