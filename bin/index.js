@@ -3,17 +3,17 @@
 import chalk from "chalk";
 import intro from "../intro.js";
 import inquirer from "inquirer";
-import inputData from "../file-data.js";
+import inputData from "../read-input.js";
 import ora from 'ora';
-import makeFile from "../make-file.js";
-import readFileData from "../read-file.js";
-import getAllFiles from "../get-files.js";
+import { readFileData, getAllFiles, getDirectory, moveFile, makeFile  } from "../lib/file-operation.js";
 
 const enumOp = {
     MAKE: 'make file',
     READ: 'read file',
-    UPDATE: 'update file'
+    MOVE: 'move file',
+    COPY: 'copy paste file'
 };
+
 
 async function main() {
     await intro();
@@ -25,7 +25,7 @@ async function main() {
                 type: 'list',
                 name: 'operation',
                 message: 'Choose operation',
-                choices: [enumOp.MAKE, enumOp.READ, enumOp.UPDATE]
+                choices: [enumOp.MAKE, enumOp.READ, enumOp.MOVE]
             }
         ]);
 
@@ -57,7 +57,7 @@ async function main() {
 
             spinner.succeed("File succesfuly created");
         }else if (chooseOp.operation == enumOp.READ) {
-            const allFiles = getAllFiles(".");
+            const allFiles = getAllFiles("./");
 
             const chooseFile = await inquirer.prompt([
                 {
@@ -76,7 +76,20 @@ async function main() {
             } catch (err) {
                 console.error(chalk.red("Error reading file:"), err);
             }
-        }else {
+        }else if(chooseOp.operation == enumOp.MOVE){
+            let directories = await getDirectory('./');
+            const chooseDir = await inquirer.prompt([
+                {
+                    type: 'list',
+                    name: 'directory',
+                    message: 'choose a directory',
+                    choices: directories
+                }
+            ]);
+            console.info(chalk.green(`you choose ${chooseDir.directory}`));
+        }else if(chooseOp.operation == enumOp.COPY){
+            
+        }else{
             console.info(chalk.red('Operation is still on development'));
         }
 
@@ -89,14 +102,10 @@ async function main() {
             }
         ]);
 
-         if (isContinue.answer === 'no') {
-            process.emit('SIGINT'); 
+         if(isContinue.answer === 'no') {
+            process.exit(0); 
         }
     }
 }
-
-process.on('SIGINT', () => {
-    process.exit(0);
-});
 
 main();
