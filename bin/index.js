@@ -3,7 +3,6 @@
 import chalk from "chalk";
 import intro from "../intro.js";
 import inquirer from "inquirer";
-import inputData from "../read-input.js";
 import ora from 'ora';
 import { readFileData, getAllFiles, getDirectory, moveFile, makeFile  } from "../lib/file-operation.js";
 
@@ -43,13 +42,21 @@ async function main() {
                     name: 'fileName',
                     message: 'file name: ',
                 },
+                {
+                    type: 'editor',
+                    name: 'fileData',
+                    message: 'input data: ',
+                }
             ]);
 
-            const data = await inputData(chalk.blue("Input data for your file:\n"));
+            if(file.extension == undefined || file.fileData == undefined || file.fileName == undefined){
+                console.info("Operation stopped");
+                continue;
+            }
 
             const spinner = ora({ text: 'making file', color: 'cyan' }).start();
             
-            const result = await makeFile(data, file.extension, file.fileName);
+            const result = await makeFile(file.fileData, file.extension, file.fileName);
 
             if(!result) {
                 spinner.fail("Fail to make file");
@@ -88,7 +95,7 @@ async function main() {
             ]);
             console.info(chalk.green(`you choose ${chooseDir.directory}`));
         }else if(chooseOp.operation == enumOp.COPY){
-            
+
         }else{
             console.info(chalk.red('Operation is still on development'));
         }
