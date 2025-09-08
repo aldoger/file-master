@@ -92,8 +92,26 @@ async function main() {
             console.info(chalk.green(`you choose ${chooseDir.directory}`));
         }else if(chooseOp.operation == enumOp.COPY){
             console.info(chalk.red('Operation is still on development'));
-        }else{
-            console.info(chalk.red('Operation is still on development'));
+        }else if(chooseOp.operation == enumOp.EDIT){
+            const allFiles = getAllFiles("./");
+
+            const chooseFile = await inquirer.prompt([
+                {
+                    type: 'list',
+                    name: 'file',
+                    message: 'choose file:',
+                    choices: allFiles,
+                },
+            ]);
+
+            const editFile = await inquirer.prompt([
+                {
+                    type: 'editor',
+                    name: 'fileData',
+                    message: 'Edit your file',
+                    file: chooseFile.file,
+                }
+            ]);
         }
 
         const isContinue = await inquirer.prompt([
