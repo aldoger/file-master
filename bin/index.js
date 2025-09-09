@@ -92,7 +92,7 @@ async function main() {
                 }
             ]);
 
-            let oldPath = path.join(__dirname, chooseFile); // TODO dirname cannot be used
+            let oldPath = path.resolve(chooseFile.file);
             let currentPath = './';
             let chooseDir;
 
@@ -117,7 +117,7 @@ async function main() {
 
             const spinner = ora({ text: 'making file', color: 'cyan' }).start();
 
-            const newPath = path.join(currentPath, chooseFile);
+            const newPath = path.join(currentPath, chooseFile.file);
             await moveFile(oldPath, newPath);
             spinner.succeed(`File moved to ${newPath}`);
 
