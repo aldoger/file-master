@@ -5,6 +5,7 @@ import intro from "../intro.js";
 import inquirer from "inquirer";
 import ora from 'ora';
 import { readFileData, getAllFiles, getDirectory, moveFile, makeFile  } from "../lib/file-operation.js";
+import path from 'path';
 
 const enumOp = {
     MAKE: 'make file',
@@ -80,16 +81,46 @@ async function main() {
                 console.error(chalk.red("Error reading file:"), err);
             }
         }else if(chooseOp.operation == enumOp.MOVE){
-            let directories = await getDirectory('./');
-            const chooseDir = await inquirer.prompt([
+
+            let files = getAllFiles('./');
+            let chooseFile = await inquirer.prompt([
                 {
                     type: 'list',
-                    name: 'directory',
-                    message: 'choose a directory',
-                    choices: directories
+                    name: 'file',
+                    message: 'Choose file',
+                    choices: files
                 }
             ]);
-            console.info(chalk.green(`you choose ${chooseDir.directory}`));
+
+            let oldPath = path.join(__dirname, chooseFile); // TODO dirname cannot be used
+            let currentPath = './';
+            let chooseDir;
+
+            do {
+                const directories = await getDirectory(currentPath);
+
+                chooseDir = await inquirer.prompt([
+                    {
+                        type: 'list',
+                        name: 'directory',
+                        message: `Choose directory: (${currentPath} to move)`,
+                        choices: directories,
+                        loop: false,
+                    }
+                ]);
+
+                currentPath = path.resolve(currentPath, chooseDir.directory);
+                console.log(`your in directory: ${currentPath}`);
+            }while(chooseDir.directory !== './')
+            
+            console.info(chalk.blue(`File akan dipindahkan ke direktori: ${currentPath}`));
+
+            const spinner = ora({ text: 'making file', color: 'cyan' }).start();
+
+            const newPath = path.join(currentPath, chooseFile);
+            await moveFile(oldPath, newPath);
+            spinner.succeed(`File moved to ${newPath}`);
+
         }else if(chooseOp.operation == enumOp.COPY){
             console.info(chalk.red('Operation is still on development'));
         }else if(chooseOp.operation == enumOp.EDIT){
