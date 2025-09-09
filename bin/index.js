@@ -4,7 +4,7 @@ import chalk from "chalk";
 import intro from "../intro.js";
 import inquirer from "inquirer";
 import ora from 'ora';
-import { readFileData, getAllFiles, getDirectory, moveFile, makeFile  } from "../lib/file-operation.js";
+import { readFileData, getAllFiles, getDirectory, moveFile, makeFile, copyFile  } from "../lib/file-operation.js";
 import path from 'path';
 
 const enumOp = {
@@ -122,7 +122,51 @@ async function main() {
             spinner.succeed(`File moved to ${newPath}`);
 
         }else if(chooseOp.operation == enumOp.COPY){
-            console.info(chalk.red('Operation is still on development'));
+            const files = getAllFiles('./');
+
+            const chooseFile = await inquirer.prompt([
+                {
+                    type: 'list',
+                    name: 'file',
+                    message: 'Choose file',
+                    choices: files
+                }
+            ]);
+
+            const sourcePath = path.resolve(chooseFile.file);
+
+            let currentPath = './';
+            let chooseDir;
+
+            do {
+                const directories = await getDirectory(currentPath);
+
+                chooseDir = await inquirer.prompt([
+                    {
+                        type: 'list',
+                        name: 'directory',
+                        message: `Choose directory: (${currentPath} to move)`,
+                        choices: directories,
+                        loop: false,
+                    }
+                ]);
+
+                currentPath = path.resolve(currentPath, chooseDir.directory);
+                console.log(`your in directory: ${currentPath}`);
+            }while(chooseDir.directory !== './')
+
+                
+            console.info(chalk.blue(`File akan dicopy ke direktori: ${currentPath}`));
+
+            const spinner = ora({ text: 'making file', color: 'cyan' }).start();
+            
+            const destinationPath = path.resolve(currentPath, chooseFile.file);
+
+            await copyFile(sourcePath, destinationPath)
+
+            spinner.succeed(`File dicopy di ${destinationPath}`);
+
+            
         }else if(chooseOp.operation == enumOp.EDIT){
             const allFiles = getAllFiles("./");
 
