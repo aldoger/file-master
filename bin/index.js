@@ -12,7 +12,8 @@ const enumOp = {
     READ: 'read file',
     MOVE: 'move file',
     EDIT: 'edit file',
-    COPY: 'copy paste file'
+    COPY: 'copy paste file',
+    ENCYRPT: 'encyrpt file',
 };
 
 
@@ -166,27 +167,11 @@ async function main() {
 
             spinner.succeed(`File dicopy di ${destinationPath}`);
 
-            
-        }else if(chooseOp.operation == enumOp.EDIT){
-            const allFiles = getAllFiles("./");
-
-            const chooseFile = await inquirer.prompt([
-                {
-                    type: 'list',
-                    name: 'file',
-                    message: 'choose file:',
-                    choices: allFiles,
-                },
-            ]);
-
-            const editFile = await inquirer.prompt([
-                {
-                    type: 'editor',
-                    name: 'fileData',
-                    message: 'Edit your file',
-                    file: chooseFile.file,
-                }
-            ]);
+             
+        }else if(chooseOp.operation == enumOp.EDIT){ //TODO hapus operator  
+            console.info(chalk.red("Operation is in development"));
+        }else if(chooseOp.operation == enumOp.ENCYRPT){
+            console.info(chalk.red("Operation is in development"));
         }
 
         const isContinue = await inquirer.prompt([
