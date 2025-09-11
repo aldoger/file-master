@@ -6,6 +6,7 @@ import inquirer from "inquirer";
 import ora from 'ora';
 import { readFileData, getAllFiles, getDirectory, moveFile, makeFile, copyFile  } from "../lib/file-operation.js";
 import path from 'path';
+import { ALGORITHM, encyrptFile } from "../lib/encrypt.js";
 
 const enumOp = {
     MAKE: 'make file',
@@ -27,7 +28,7 @@ async function main() {
                 type: 'list',
                 name: 'operation',
                 message: 'Choose operation',
-                choices: [enumOp.MAKE, enumOp.READ, enumOp.MOVE, enumOp.EDIT, enumOp.COPY]
+                choices: [enumOp.MAKE, enumOp.READ, enumOp.MOVE, enumOp.EDIT, enumOp.COPY, enumOp.ENCYRPT]
             }
         ]);
 
@@ -60,7 +61,7 @@ async function main() {
                 spinner.fail("Fail to make file");
             }
 
-            spinner.succeed("File succesfuly created");
+            spinner.succeed(chalk.green("File succesfuly created"));
         }else if (chooseOp.operation == enumOp.READ) {
             const allFiles = getAllFiles("./");
 
@@ -120,7 +121,7 @@ async function main() {
 
             const newPath = path.join(currentPath, chooseFile.file);
             await moveFile(oldPath, newPath);
-            spinner.succeed(`File moved to ${newPath}`);
+            spinner.succeed(chalk.green(`File moved to ${newPath}`));
 
         }else if(chooseOp.operation == enumOp.COPY){
             const files = getAllFiles('./');
@@ -165,13 +166,46 @@ async function main() {
 
             await copyFile(sourcePath, destinationPath)
 
-            spinner.succeed(`File dicopy di ${destinationPath}`);
+            spinner.succeed(chalk.green(`File dicopy di ${destinationPath}`));
 
              
         }else if(chooseOp.operation == enumOp.EDIT){ //TODO hapus operator  
             console.info(chalk.red("Operation is in development"));
         }else if(chooseOp.operation == enumOp.ENCYRPT){
-            console.info(chalk.red("Operation is in development"));
+            const files =  getAllFiles('./');
+
+            const chooseFile = await inquirer.prompt([
+                {
+                    type: 'list',
+                    name: 'file',
+                    message: 'choose file to encyrpt',
+                    choices: files
+                }
+            ]);
+
+            const fileMessage = await readFileData(chooseFile.file);
+
+            const algorithmValues = Object.values(ALGORITHM).flatMap(innerObj => Object.values(innerObj)); // TODO ubah jadi array
+
+            const encyrptOp = await inquirer.prompt([
+                {
+                    type: 'list',
+                    name: 'algo',
+                    message: 'choose algorithm',
+                    choices: algorithmValues,
+                },
+                {
+                    type: 'password',
+                    name: 'key',
+                    message: 'input key',
+                }
+            ]);
+
+            const spinner = ora({ text: 'making file', color: 'cyan' }).start();
+
+            await encyrptFile(encyrptOp.algo, fileMessage, encyrptOp.key);
+
+            spinner.succeed(chalk.green("Encyrption done"));
         }
 
         const isContinue = await inquirer.prompt([
