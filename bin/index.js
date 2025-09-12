@@ -6,7 +6,7 @@ import inquirer from "inquirer";
 import ora from 'ora';
 import { readFileData, getAllFiles, getDirectory, moveFile, makeFile, copyFile  } from "../lib/file-operation.js";
 import path from 'path';
-import { ALGORITHM, encyrptFile } from "../lib/encrypt.js";
+import {  Algo, encyrptFile  } from "../lib/encrypt.js";
 
 const enumOp = {
     MAKE: 'make file',
@@ -74,7 +74,7 @@ async function main() {
                 }
             ]);
 
-            try {
+            try {       
                 const data = await readFileData(chooseFile.file);
                 console.log("\n" + chalk.green("=== File Content ==="));
                 console.log(data);
@@ -185,25 +185,18 @@ async function main() {
 
             const fileMessage = await readFileData(chooseFile.file);
 
-            const algorithmValues = Object.values(ALGORITHM).flatMap(innerObj => Object.values(innerObj)); // TODO ubah jadi array
-
             const encyrptOp = await inquirer.prompt([
                 {
                     type: 'list',
                     name: 'algo',
                     message: 'choose algorithm',
-                    choices: algorithmValues,
-                },
-                {
-                    type: 'password',
-                    name: 'key',
-                    message: 'input key',
+                    choices: Algo,
                 }
             ]);
 
             const spinner = ora({ text: 'making file', color: 'cyan' }).start();
 
-            await encyrptFile(encyrptOp.algo, fileMessage, encyrptOp.key);
+            await encyrptFile(encyrptOp.algo, fileMessage, chooseFile.file);
 
             spinner.succeed(chalk.green("Encyrption done"));
         }
