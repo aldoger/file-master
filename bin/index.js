@@ -6,7 +6,7 @@ import inquirer from "inquirer";
 import ora from 'ora';
 import { readFileData, getAllFiles, getDirectory, moveFile, makeFile, copyFile, getEncFiles  } from "../lib/file-operation.js";
 import path from 'path';
-import {  Algo, encyrptFile  } from "../lib/encrypt.js";
+import {  Algo, decyrptFile, encyrptFile  } from "../lib/encrypt.js";
 
 const enumOp = {
     MAKE: 'make file',
@@ -217,6 +217,14 @@ async function main() {
                     choices: fileEnc.arrayFileSecret
                 }
             ]);
+
+            const message = await readFileData(chooseFileEnc.fileEnc);
+            
+            const secrets = await readFileData(chooseFileEnc.fileSecret);
+
+            const jsonSecrets = JSON.parse(secrets);
+
+            decyrptFile(jsonSecrets.algo, jsonSecrets.key, jsonSecrets.iv, message);
         }
 
         const isContinue = await inquirer.prompt([
