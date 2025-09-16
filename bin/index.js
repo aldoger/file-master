@@ -4,7 +4,7 @@ import chalk from "chalk";
 import intro from "../intro.js";
 import inquirer from "inquirer";
 import ora from 'ora';
-import { readFileData, getAllFiles, getDirectory, moveFile, makeFile, copyFile  } from "../lib/file-operation.js";
+import { readFileData, getAllFiles, getDirectory, moveFile, makeFile, copyFile, getEncFiles  } from "../lib/file-operation.js";
 import path from 'path';
 import {  Algo, encyrptFile  } from "../lib/encrypt.js";
 
@@ -15,6 +15,7 @@ const enumOp = {
     EDIT: 'edit file',
     COPY: 'copy paste file',
     ENCYRPT: 'encyrpt file',
+    DECYRPT: 'decyrpt file'
 };
 
 
@@ -28,7 +29,7 @@ async function main() {
                 type: 'list',
                 name: 'operation',
                 message: 'Choose operation',
-                choices: [enumOp.MAKE, enumOp.READ, enumOp.MOVE, enumOp.EDIT, enumOp.COPY, enumOp.ENCYRPT]
+                choices: [enumOp.MAKE, enumOp.READ, enumOp.MOVE, enumOp.EDIT, enumOp.COPY, enumOp.ENCYRPT, enumOp.DECYRPT]
             }
         ]);
 
@@ -199,6 +200,23 @@ async function main() {
             await encyrptFile(encyrptOp.algo, fileMessage, chooseFile.file);
 
             spinner.succeed(chalk.green("Encyrption done"));
+        }else if(chooseOp.operation == enumOp.DECYRPT) {
+            const fileEnc = await getEncFiles();
+
+            const chooseFileEnc = await inquirer.prompt([
+                {
+                    type: 'list',
+                    name: 'fileEnc',
+                    message: 'Choose encyrpted file',
+                    choices: fileEnc.arrayFilesEnc
+                },
+                {
+                    type: 'list',
+                    name: 'fileSecret',
+                    message: 'file secret',
+                    choices: fileEnc.arrayFileSecret
+                }
+            ]);
         }
 
         const isContinue = await inquirer.prompt([
