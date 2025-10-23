@@ -1,12 +1,29 @@
 #!/usr/bin/env node
 
 import chalk from "chalk";
-import intro from "../intro.js";
+import intro from "../lib/intro.js";
 import inquirer from "inquirer";
 import ora from 'ora';
 import { readFileData, getAllFiles, getDirectory, moveFile, makeFile, copyFile, getEncFiles  } from "../lib/file-operation.js";
 import path from 'path';
 import {  Algo, decyrptFile, encyrptFile  } from "../lib/encrypt.js";
+import { unZipFile, zipFile } from "../lib/archive.js";
+import process from 'process';
+
+process.stdin.setRawMode(true);
+process.stdin.resume();
+process.stdin.setEncoding('utf8');
+
+process.stdin.on('data', (key) => {
+  if (key === '\u001b') { 
+    console.clear();
+    process.exit(0);
+  }
+
+  if (key === '\u0003') { 
+    process.exit(0);
+  }
+});
 
 const enumOp = {
     MAKE: 'make file',
@@ -15,7 +32,9 @@ const enumOp = {
     EDIT: 'edit file',
     COPY: 'copy paste file',
     ENCYRPT: 'encyrpt file',
-    DECYRPT: 'decyrpt file'
+    DECYRPT: 'decyrpt file',
+    ZIPFILE: 'zip file',
+    UNZIP: 'unzip file'
 };
 
 
@@ -29,7 +48,8 @@ async function main() {
                 type: 'list',
                 name: 'operation',
                 message: 'Choose operation',
-                choices: [enumOp.MAKE, enumOp.READ, enumOp.MOVE, enumOp.EDIT, enumOp.COPY, enumOp.ENCYRPT, enumOp.DECYRPT]
+                choices: [enumOp.MAKE, enumOp.READ, enumOp.MOVE, enumOp.EDIT, enumOp.COPY, enumOp.ENCYRPT, enumOp.DECYRPT, enumOp.ZIPFILE, enumOp.UNZIP],
+                loop: false
             }
         ]);
 
@@ -225,6 +245,52 @@ async function main() {
             const jsonSecrets = JSON.parse(secrets);
 
             decyrptFile(jsonSecrets.algo, jsonSecrets.key, jsonSecrets.iv, message);
+        } else if(chooseOp.operation == enumOp.ZIPFILE) {
+            const files = getAllFiles('./');
+
+            const chooseFile = await inquirer.prompt([
+                {
+                    type: 'list',
+                    name: 'file',
+                    message: 'Choose file',
+                    choices: files
+                },
+                {
+                    type: 'input',
+                    name: 'output_file',
+                    message: 'file output name',
+                }
+            ]);
+
+            const sourcePath = path.resolve(chooseFile.file);
+            const output = chooseFile.output_file + ".gz";
+
+            await zipFile(sourcePath, output);
+
+            console.info(chalk.green("File successfully zipped"));
+        }else if(chooseOp.operation == enumOp.UNZIP) {
+            const files = getAllFiles('./');
+
+            const chooseFile = await inquirer.prompt([
+                {
+                    type: 'list',
+                    name: 'file',
+                    message: 'Choose file',
+                    choices: files
+                },
+                {
+                    type: 'input',
+                    name: 'output_file',
+                    message: 'file output name',
+                }
+            ]);
+
+            const sourcePath = path.resolve(chooseFile.file);
+            const output = chooseFile.output_file;
+
+            await unZipFile(sourcePath, output);
+
+            console.info(chalk.green("File successfully zipped"));
         }
 
         const isContinue = await inquirer.prompt([
