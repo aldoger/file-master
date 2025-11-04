@@ -292,7 +292,7 @@ async function main() {
 
             console.info(chalk.green("File successfully zipped"));
         }
-
+        
         const isContinue = await inquirer.prompt([
             {
                 type: 'select',
