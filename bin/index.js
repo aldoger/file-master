@@ -34,7 +34,9 @@ const enumOp = {
     ENCYRPT: 'encyrpt file',
     DECYRPT: 'decyrpt file',
     ZIPFILE: 'zip file',
-    UNZIP: 'unzip file'
+    UNZIP: 'unzip file',
+    DOWNLOADIMG: 'download image from web',
+    CONVERT: 'convert file extension'
 };
 
 
@@ -48,7 +50,7 @@ async function main() {
                 type: 'list',
                 name: 'operation',
                 message: 'Choose operation',
-                choices: [enumOp.MAKE, enumOp.READ, enumOp.MOVE, enumOp.EDIT, enumOp.COPY, enumOp.ENCYRPT, enumOp.DECYRPT, enumOp.ZIPFILE, enumOp.UNZIP],
+                choices: [enumOp.MAKE, enumOp.READ, enumOp.MOVE, enumOp.EDIT, enumOp.COPY, enumOp.ENCYRPT, enumOp.DECYRPT, enumOp.ZIPFILE, enumOp.UNZIP, enumOp.DOWNLOADIMG, enumOp.CONVERT],
                 loop: false
             }
         ]);
@@ -291,6 +293,10 @@ async function main() {
             await unZipFile(sourcePath, output);
 
             console.info(chalk.green("File successfully zipped"));
+        }else if(chooseOp.operation == enumOp.DOWNLOADIMG) {
+            console.info(chalk.red("operation still on development"));
+        }else if(chooseOp.operation == enumOp.CONVERT) {
+            console.info(chalk.red("operation still on development"));
         }
         
         const isContinue = await inquirer.prompt([
