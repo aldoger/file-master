@@ -8,6 +8,7 @@ import { readFileData, getAllFiles, getDirectory, moveFile, makeFile, copyFile, 
 import path from 'path';
 import {  Algo, decyrptFile, encyrptFile  } from "../lib/encrypt.js";
 import { unZipFile, zipFile } from "../lib/archive.js";
+import { downloadImage, downloadMediaFireFile, downloadMegaFile, downloadGDriveFile } from "../lib/download.js";
 import process from 'process';
 
 process.stdin.setRawMode(true);
@@ -35,7 +36,7 @@ const enumOp = {
     DECYRPT: 'decyrpt file',
     ZIPFILE: 'zip file',
     UNZIP: 'unzip file',
-    DOWNLOADIMG: 'download image from web',
+    DOWNLOADIMG: 'download image, mediafire, gdrive, mega from web',
     CONVERT: 'convert file extension'
 };
 
@@ -191,7 +192,6 @@ async function main() {
 
             spinner.succeed(chalk.green(`File dicopy di ${destinationPath}`));
 
-             
         }else if(chooseOp.operation == enumOp.EDIT){ //TODO hapus operator  
             console.info(chalk.red("Operation is in development"));
         }else if(chooseOp.operation == enumOp.ENCYRPT){
@@ -294,7 +294,67 @@ async function main() {
 
             console.info(chalk.green("File successfully zipped"));
         }else if(chooseOp.operation == enumOp.DOWNLOADIMG) {
-            console.info(chalk.red("operation still on development"));
+
+            let currentPath = './';
+            let chooseDir;
+
+            do {
+                const directories = await getDirectory(currentPath);
+
+                chooseDir = await inquirer.prompt([
+                    {
+                        type: 'list',
+                        name: 'directory',
+                        message: `Choose directory: (${currentPath} to move)`,
+                        choices: directories,
+                        loop: false,
+                    }
+                ]);
+
+                currentPath = path.resolve(currentPath, chooseDir.directory);
+                console.log(`Download path: ${currentPath}`);
+            }while(chooseDir.directory !== './')
+
+            const downloadFile = await inquirer.prompt([
+                {
+                    type: 'select',
+                    name: 'download_platform',
+                    message: 'what platform',
+                    choices: ['mega', 'web image', 'mediafire', 'gdrive']
+                },
+                {
+                    type: 'input',
+                    name: 'link',
+                    message: 'file url',
+                }
+            ]);
+
+            const spinner = ora({ text: 'making file', color: 'cyan' }).start();
+            try {
+                switch(downloadFile.download_platform) {
+                    case 'web image':
+                        const imgResult = await downloadImage(downloadFile.link, chooseDir.directory);
+                        spinner.succeed("File successfully downloaded: " + imgResult);
+                        break;
+                    case 'mediafire':
+                        console.log(chalk.red("Still on development"));
+                        spinner.stop();
+                        break;
+                    case 'mega':
+                        console.log(chalk.red("Still on development"));
+                        spinner.stop();
+                        break;
+                    case 'gdrive':
+                        console.log(chalk.red("Still on development"));
+                        spinner.stop();
+                        break;
+                }   
+            } catch (err) {
+                spinner.fail("Error downloading file");
+                console.error(chalk.red("Error downloading file: " + err.message));
+            }
+
+
         }else if(chooseOp.operation == enumOp.CONVERT) {
             console.info(chalk.red("operation still on development"));
         }
