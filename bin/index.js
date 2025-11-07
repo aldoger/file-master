@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 import chalk from "chalk";
 import intro from "../lib/intro.js";
 import inquirer from "inquirer";
@@ -8,7 +7,7 @@ import { readFileData, getAllFiles, getDirectory, moveFile, makeFile, copyFile, 
 import path from 'path';
 import {  Algo, decyrptFile, encyrptFile  } from "../lib/encrypt.js";
 import { unZipFile, zipFile } from "../lib/archive.js";
-import { downloadImage, downloadMediaFireFile, downloadMegaFile, downloadGDriveFile } from "../lib/download.js";
+import { downloadImage, downloadMegaFile, downloadGDriveFile, downloadSpotifyMusic } from "../lib/download.js";
 import process from 'process';
 
 process.stdin.setRawMode(true);
@@ -30,7 +29,6 @@ const enumOp = {
     MAKE: 'make file',
     READ: 'read file',
     MOVE: 'move file',
-    EDIT: 'edit file',
     COPY: 'copy paste file',
     ENCYRPT: 'encyrpt file',
     DECYRPT: 'decyrpt file',
@@ -51,7 +49,7 @@ async function main() {
                 type: 'list',
                 name: 'operation',
                 message: 'Choose operation',
-                choices: [enumOp.MAKE, enumOp.READ, enumOp.MOVE, enumOp.EDIT, enumOp.COPY, enumOp.ENCYRPT, enumOp.DECYRPT, enumOp.ZIPFILE, enumOp.UNZIP, enumOp.DOWNLOADIMG, enumOp.CONVERT],
+                choices: [enumOp.MAKE, enumOp.READ, enumOp.MOVE, enumOp.COPY, enumOp.ENCYRPT, enumOp.DECYRPT, enumOp.ZIPFILE, enumOp.UNZIP, enumOp.DOWNLOADIMG, enumOp.CONVERT],
                 loop: false
             }
         ]);
@@ -192,8 +190,6 @@ async function main() {
 
             spinner.succeed(chalk.green(`File dicopy di ${destinationPath}`));
 
-        }else if(chooseOp.operation == enumOp.EDIT){ //TODO hapus operator  
-            console.info(chalk.red("Operation is in development"));
         }else if(chooseOp.operation == enumOp.ENCYRPT){
             const files =  getAllFiles('./');
 
@@ -320,7 +316,7 @@ async function main() {
                     type: 'select',
                     name: 'download_platform',
                     message: 'what platform',
-                    choices: ['mega', 'web image', 'mediafire', 'gdrive']
+                    choices: ['mega', 'web image', 'mediafire', 'gdrive', 'spotify']
                 },
                 {
                     type: 'input',
@@ -334,19 +330,22 @@ async function main() {
                 switch(downloadFile.download_platform) {
                     case 'web image':
                         const imgResult = await downloadImage(downloadFile.link, chooseDir.directory);
-                        spinner.succeed("File successfully downloaded: " + imgResult);
+                        spinner.succeed(chalk.green("File successfully downloaded: " + imgResult));
                         break;
                     case 'mediafire':
-                        console.log(chalk.red("Still on development"));
-                        spinner.stop();
+                        spinner.fail(chalk.red("Still on development"))
                         break;
                     case 'mega':
-                        console.log(chalk.red("Still on development"));
-                        spinner.stop();
+                        const megaFile = await downloadMegaFile(downloadFile.link, chooseDir.directory);
+                        spinner.succeed(chalk.green("Download complete"));
                         break;
                     case 'gdrive':
-                        console.log(chalk.red("Still on development"));
-                        spinner.stop();
+                        const driveFile = await downloadGDriveFile(downloadFile.link, chooseDir.directory);
+                        spinner.succeed(chalk.green("File successfully downloaded: " + driveFile));
+                        break;
+                    case 'spotify':
+                        const spotifyMus = await downloadSpotifyMusic(downloadFile.link, chooseDir.directory);
+                        spinner.succeed(chalk.green("File successfully downloaded: " + spotifyMus));
                         break;
                 }   
             } catch (err) {
@@ -354,23 +353,10 @@ async function main() {
                 console.error(chalk.red("Error downloading file: " + err.message));
             }
 
-
         }else if(chooseOp.operation == enumOp.CONVERT) {
             console.info(chalk.red("operation still on development"));
         }
         
-        const isContinue = await inquirer.prompt([
-            {
-                type: 'select',
-                name: 'answer',
-                message: 'Do you want to continue?',
-                choices: ['yes', 'no']
-            }
-        ]);
-
-         if(isContinue.answer === 'no') {
-            process.exit(0); 
-        }
     }
 }
 
