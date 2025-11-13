@@ -113,12 +113,12 @@ export async function downloadSpotifyMusic(spotifyLink, dirPath) {
   });
 }
 
-export default async function downloadVideyVideo(videyLink, dirPath) {
+export async function downloadVideyVideo(videyLink, dirPath) {
   return new Promise((resolve, reject) => {
     resolve();
   });
 }
 
-export default async function downloadYoutubeVideos(ytLink, dirPath) {
+export async function downloadYoutubeVideos(ytLink, dirPath) {
   
 }

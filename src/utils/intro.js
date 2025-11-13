@@ -26,12 +26,13 @@ async function intro() {
         console.log(chalk.yellowBright("✨ Features:"));
         console.log(
           chalk.greenBright(`
-  ▸ ${chalk.white("Create/Make")} new files and directories effortlessly.
-  ▸ ${chalk.white("Read")} read file content right from the terminal.
-  ▸ ${chalk.white("Copy Paste")} copy files safely.
-  ▸ ${chalk.white("Move")} Move files between directories instantly.
+  ▸ ${chalk.white("create/Make")} new files and directories effortlessly.
+  ▸ ${chalk.white("read")} read file content right from the terminal.
+  ▸ ${chalk.white("copy paste")} copy files safely.
+  ▸ ${chalk.white("move")} Move files between directories instantly.
   ▸ ${chalk.white("encyrpt")} Encyrpt your file.
   ▸ ${chalk.white("decyrpt")} Decyrpt your file.
+  ▸ ${chalk.white("compress")} Compress file
   ▸ ${chalk.white("zip")} Zip files
   ▸ ${chalk.white("download file")} Download file (image, Spotify, megafile, google drive) 
         `)
