@@ -1,6 +1,6 @@
 import { Zip } from "zip-lib";
 
-export default function ZipFiles(arrFilePath, outPath) {
+export function ZipFiles(arrFilePath, outPath) {
     const zip = new Zip();
     return new Promise((resolve, reject) => {
         arrFilePath.forEach((path) => {
@@ -13,11 +13,5 @@ export default function ZipFiles(arrFilePath, outPath) {
             console.error("Error zipping files: ", err.message);
             reject(err);
         })
-    });
-}
-
-export default function zipFolder(folderPath, outPath) {
-    return new Promise((resolve, reject) => {
-
     });
 }

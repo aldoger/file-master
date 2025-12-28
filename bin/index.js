@@ -4,6 +4,7 @@ import intro from "../src/utils/intro.js";
 import inquirer from "inquirer";
 import ora from 'ora';
 import { readFileData, getAllFiles, getDirectory, moveFile, makeFile, copyFile, getEncFiles  } from "../src/lib/file.js";
+import { ZipFiles } from '../src/lib/archive.js'
 import path from 'path';
 import {  Algo, decyrptFile, encyrptFile  } from "../src/lib/encrypt.js";
 import {  compressFile, decompressFile } from "../src/lib/compress.js";
@@ -34,7 +35,7 @@ const enumOp = {
     DECYRPT: 'decyrpt file',
     COMPRESS: 'compress file',
     DECOMPRESS: 'decompress file',
-    ZIP: 'zip files or folder', 
+    ZIP: 'zip files', 
     DOWNLOADIMG: 'download image, mediafire, gdrive, mega from web',
     CONVERT: 'convert file extension'
 };
@@ -50,7 +51,7 @@ async function main() {
                 type: 'list',
                 name: 'operation',
                 message: 'Choose operation',
-                choices: [enumOp.MAKE, enumOp.READ, enumOp.MOVE, enumOp.COPY, enumOp.ENCYRPT, enumOp.DECYRPT, enumOp.COMPRESS, enumOp.DECOMPRESS, enumOp.DOWNLOADIMG, enumOp.CONVERT],
+                choices: [enumOp.MAKE, enumOp.READ, enumOp.MOVE, enumOp.COPY, enumOp.ENCYRPT, enumOp.DECYRPT, enumOp.ZIP, enumOp.COMPRESS, enumOp.DECOMPRESS, enumOp.DOWNLOADIMG, enumOp.CONVERT],
                 loop: false
             }
         ]);
@@ -85,6 +86,7 @@ async function main() {
             }
 
             spinner.succeed(chalk.green("File succesfuly created"));
+
         // Read data from a file
         }else if (chooseOp.operation == enumOp.READ) {
             const allFiles = getAllFiles("./");
@@ -106,6 +108,7 @@ async function main() {
             } catch (err) {
                 console.error(chalk.red("Error reading file:"), err);
             }
+            
         // Move file to another existing folder
         }else if(chooseOp.operation == enumOp.MOVE){
 
@@ -251,7 +254,53 @@ async function main() {
 
             decyrptFile(jsonSecrets.algo, jsonSecrets.key, jsonSecrets.iv, message);
         
-        // Compress file
+       
+        } else if(chooseOp.operation == enumOp.ZIP){
+
+            let arrayFiles = []
+
+            const files = getAllFiles('./');
+
+            do {
+                const chooseFile = await inquirer.prompt([
+                    {
+                        type: 'list',
+                        name: 'file',
+                        message: 'Choose file',
+                        choices: files,
+                    },
+                    {
+                        type: 'confirm',
+                        name: 'add',
+                        message: 'do you want to add another file? (y/N)',
+                        default: true
+                    },
+                ]);
+
+                arrayFiles.push(chooseFile.file);
+
+                if (!chooseFile.add) break
+            } while (1);
+
+            const outputFile = await inquirer.prompt([
+                {
+                    type: 'input',
+                    name: 'name',
+                    message: 'zip file name?'
+                }
+            ]);
+
+            const spinner = ora({ text: 'making file', color: 'cyan' }).start();
+
+            const result = await ZipFiles(arrayFiles, outputFile.name);
+
+            if(!result) {
+                spinner.fail();
+            }
+
+            spinner.succeed(chalk.green("zip success"));
+
+         // Compress file
         } else if(chooseOp.operation == enumOp.COMPRESS) {
             const files = getAllFiles('./');
 
