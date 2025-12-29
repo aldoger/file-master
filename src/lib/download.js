@@ -42,8 +42,27 @@ export async function downloadMegaFile(megaFileLink, dirPath) {
     files.loadAttributes(async (err, file) => {
       if (err) reject(err);
 
+      const savePath = path.join(dirPath, file.name);
+      console.info(`⬇️ Downloading ${file.name}...`);
+      const opts = {
+        forceHttps: true,
+        maxConnections: 12,
+        maxChunkSize: 1024 * 1024, // 1 MB
+        initialChunkSize: 1024 * 1024,
+        chunkSizeIncrement: 0,
+      }
+
       try {
-        await downloadSingleMegaFile(file, dirPath);
+
+        const buf = await file.downloadBuffer(opts);
+        const writer = createWriteStream(savePath);
+        writer.write(buf);
+        writer.end();
+        writer.on("finish", () => {
+          console.log(`✅ Download complete: ${file.name}`);
+          resolve();
+        });
+        writer.on("error", reject);
         resolve(file.name);
       }catch(err) {
         reject(err);
