@@ -7,6 +7,6 @@ export async function convertJPGToPNG(file) {
     
 }
 
-export async function convertPDFToTXT(file) {
+export async function convertPDFToWord(file) {
     
 }
