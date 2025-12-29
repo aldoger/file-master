@@ -5,6 +5,7 @@ import { gdrive, spotify } from 'btch-downloader';
 import { File } from 'megajs';
 import { pipeline } from 'stream';
 import path from 'path';
+import { downloadSingleMegaFile } from '../utils/mega-helper.js';
 
 export async function downloadImage(url, dirPath) {
   const client = url.startsWith('https') ? https : http;
@@ -33,66 +34,39 @@ export async function downloadImage(url, dirPath) {
   });
 }
 
-// Dependencies not maintain, mediafire cannot be downloaded
-export async function downloadMediaFireFile(mediaFireLink, dirPath) {
-  return new Promise((resolve, reject) => {
-    mediafire(mediaFireLink)
-      .then(async (file) => {
-        if (file.status !== true) {
-          return reject(new Error("failed to get direct link"));
-        }
 
-        let directUrl = file.result.url;
-        const filePath = path.join(dirPath, file.result.filename);
-
-
-        const response = await fetch(directUrl);
-
-        const contentType = response.headers.get("content-type") || "";
-        if (contentType.includes("text/html")) {
-          const html = await response.text();
-          const match = html.match(/https:\/\/download[^"]+/);
-
-          if (!match) {
-            return reject(
-              new Error("cannot extract download url")
-            );
-          }
-
-          directUrl = match[0];
-          console.log("Re-fetch real link:", directUrl);
-        }
-
-        const realResponse = await fetch(directUrl);
-        if (!realResponse.ok) {
-          return reject(new Error(`HTTP error: ${realResponse.status}`));
-        }
-
-        const writer = fs.createWriteStream(filePath);
-        pipeline(realResponse.body, writer, (err) => {
-          if (err) return reject(err);
-          resolve(filePath);
-        });
-      })
-      .catch((err) => reject(err));
-  });
-}
-
-// Some downloads still not be done
 export async function downloadMegaFile(megaFileLink, dirPath) {
   return new Promise((resolve, reject) => {
-    const file = File.fromURL(megaFileLink);
+    const files = File.fromURL(megaFileLink);
 
-    file.loadAttributes((err) => {
-      if (err) return reject(err);
+    files.loadAttributes(async (err, file) => {
+      if (err) reject(err);
 
-      file.children.forEach(async (data) => {
-        const filePath = path.join(dirPath, data.name);
-        const success = await downloadIterMegaFile(data, filePath);
-        if(!success) return reject("Error downloading file");
-      });
+      const savePath = path.join(dirPath, file.name);
+      console.info(`⬇️ Downloading ${file.name}...`);
+      const opts = {
+        forceHttps: true,
+        maxConnections: 12,
+        maxChunkSize: 1024 * 1024, // 1 MB
+        initialChunkSize: 1024 * 1024,
+        chunkSizeIncrement: 0,
+      }
 
-      resolve();
+      try {
+
+        const buf = await file.downloadBuffer(opts);
+        const writer = createWriteStream(savePath);
+        writer.write(buf);
+        writer.end();
+        writer.on("finish", () => {
+          console.log(`✅ Download complete: ${file.name}`);
+          resolve();
+        });
+        writer.on("error", reject);
+        resolve(file.name);
+      }catch(err) {
+        reject(err);
+      }
     });
   });
 }
@@ -158,13 +132,12 @@ export async function downloadSpotifyMusic(spotifyLink, dirPath) {
   });
 }
 
-async function downloadIterMegaFile(file, filePath) {
-  const writer = fs.createWriteStream(filePath);
-  const reader = file.download();
+export async function downloadVideyVideo(videyLink, dirPath) {
   return new Promise((resolve, reject) => {
-    pipeline(reader, writer, (err) => {
-      if (err) return reject(err);
-      resolve();
-    });
-  }); 
+    resolve();
+  });
+}
+
+export async function downloadYoutubeVideos(ytLink, dirPath) {
+  
 }

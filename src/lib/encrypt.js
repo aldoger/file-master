@@ -1,5 +1,5 @@
 import { createCipheriv, randomBytes, createDecipheriv, getCiphers, KeyObject } from 'crypto';
-import { makeFile } from './file-operation.js';
+import { makeFile } from './file.js';
 import chalk from 'chalk';
 
 export const Algo = [
@@ -31,7 +31,7 @@ export async function encyrptFile(algorithm, message, filename) {
     await makeFile(encyrptedMessage, 'enc', filename);
 }
 
-export  function decyrptFile(algorithm, key, iv, message) {
+export function decyrptFile(algorithm, key, iv, message) {
 
     const bufferKey = Buffer.from(key, 'hex');
     const bufferIv = Buffer.from(iv, 'hex');
@@ -50,4 +50,12 @@ export  function decyrptFile(algorithm, key, iv, message) {
             console.info(chalk.red("Bad decrypt: wrong key or IV"));
         }
     }
+}
+
+export function encryptImage() {
+    
+}
+
+export function decryptImage() {
+
 }

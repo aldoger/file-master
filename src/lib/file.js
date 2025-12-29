@@ -30,6 +30,13 @@ export function getAllFiles(dirPath, arrayOfFiles = []) {
   return arrayOfFiles;
 }
 
+export async function getZipFiles(arrayOfZipFiles = []) {
+  for await (const file of glob("*.zip")) {
+    arrayOfZipFiles.push(file);
+  }
+  return arrayOfZipFiles;
+}
+
 export async function getEncFiles(arrayFilesEnc = [], arrayFileSecret = []) {
   for await (const file of glob("*.enc")) {
     arrayFilesEnc.push(file);
