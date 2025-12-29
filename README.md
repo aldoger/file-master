@@ -1,5 +1,3 @@
-![alt text](image.png)
-
 # 📁 File-master
 
 **File-master** is a simple yet powerful **CLI application** to help you manage your files efficiently — directly from the terminal.
