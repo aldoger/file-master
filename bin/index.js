@@ -36,7 +36,7 @@ const enumOp = {
     COMPRESS: 'compress file',
     DECOMPRESS: 'decompress file',
     ZIP: 'zip files', 
-    UNZIP: 'Unzip',
+    UNZIP: 'unzip',
     DOWNLOADIMG: 'download image, mediafire, gdrive, mega from web',
     CONVERT: 'convert file extension'
 };
