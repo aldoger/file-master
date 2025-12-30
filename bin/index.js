@@ -8,7 +8,7 @@ import { unZip, zipFiles } from '../src/lib/archive.js'
 import path from 'path';
 import {  Algo, decyrptFile, encyrptFile  } from "../src/lib/encrypt.js";
 import {  compressFile, decompressFile } from "../src/lib/compress.js";
-import { downloadImage, downloadMegaFile, downloadGDriveFile, downloadSpotifyMusic } from "../src/lib/download.js";
+import { downloadImage, downloadMegaFile, downloadGDriveFile, downloadSpotifyMusic, downloadYoutubeVideos } from "../src/lib/download.js";
 import process from 'process';
 
 process.stdin.setRawMode(true);
@@ -37,7 +37,7 @@ const enumOp = {
     DECOMPRESS: 'decompress file',
     ZIP: 'zip files', 
     UNZIP: 'unzip',
-    DOWNLOADIMG: 'download image, mediafire, gdrive, mega from web',
+    DOWNLOADIMG: 'download files/videos from internet',
     CONVERT: 'convert file extension'
 };
 
@@ -425,7 +425,7 @@ async function main() {
                     type: 'select',
                     name: 'download_platform',
                     message: 'what platform',
-                    choices: ['mega', 'web image', 'mediafire', 'gdrive', 'spotify']
+                    choices: ['mega', 'web image', 'mediafire', 'gdrive', 'spotify', 'youtube']
                 },
                 {
                     type: 'input',
@@ -433,6 +433,18 @@ async function main() {
                     message: 'file url',
                 }
             ]);
+
+            let isMP3
+            if(downloadFile.download_platform == 'youtube') {
+                isMP3 = await inquirer.prompt([
+                    {
+                        type: 'confirm',
+                        name: 'mp3',
+                        message: 'do you want to download MP3? (y/N)',
+                        default: false
+                    }
+                ]);
+            }
 
             const spinner = ora({ text: 'downloading ', color: 'blue' }).start();
             try {
@@ -456,11 +468,17 @@ async function main() {
                         const spotifyMus = await downloadSpotifyMusic(downloadFile.link, chooseDir.directory);
                         spinner.succeed(chalk.green("File successfully downloaded: " + spotifyMus));
                         break;
+                    case 'youtube':
+                        const ytVid = await downloadYoutubeVideos(downloadFile.link, chooseDir.directory, isMP3);
+                        break;
                 }   
+                
             } catch (err) {
                 spinner.fail("Error downloading file");
                 console.error(chalk.red("Error downloading file: " + err.message));
             }
+
+            spinner.succeed(chalk.green("Download complete"));
 
         }else if(chooseOp.operation == enumOp.CONVERT) {
             console.info(chalk.red("operation still on development"));

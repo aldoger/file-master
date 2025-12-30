@@ -1,11 +1,10 @@
 import fs from 'fs';
 import http from 'http';
 import https from 'https';
-import { gdrive, spotify } from 'btch-downloader';
+import { gdrive, spotify, youtube } from 'btch-downloader';
 import { File } from 'megajs';
-import { pipeline } from 'stream';
+import { pipeline } from 'stream/promises';
 import path from 'path';
-import { downloadSingleMegaFile } from '../utils/mega-helper.js';
 
 export async function downloadImage(url, dirPath) {
   const client = url.startsWith('https') ? https : http;
@@ -43,7 +42,6 @@ export async function downloadMegaFile(megaFileLink, dirPath) {
       if (err) reject(err);
 
       const savePath = path.join(dirPath, file.name);
-      console.info(`⬇️ Downloading ${file.name}...`);
       const opts = {
         forceHttps: true,
         maxConnections: 12,
@@ -55,11 +53,10 @@ export async function downloadMegaFile(megaFileLink, dirPath) {
       try {
 
         const buf = await file.downloadBuffer(opts);
-        const writer = createWriteStream(savePath);
+        const writer = fs.createWriteStream(savePath);
         writer.write(buf);
         writer.end();
         writer.on("finish", () => {
-          console.log(`✅ Download complete: ${file.name}`);
           resolve();
         });
         writer.on("error", reject);
@@ -81,7 +78,6 @@ export async function downloadGDriveFile(driveLink, dirPath) {
 
         const directUrl = file.result.data.downloadUrl;
         const fileName = file.result.data.filename;
-        console.log("Downloading file: " + fileName);
         const filePath = path.join(dirPath, file.result.data.filename);
 
         fetch(directUrl)
@@ -110,7 +106,6 @@ export async function downloadSpotifyMusic(spotifyLink, dirPath) {
         }
 
         const fileName = file.result.title;
-        console.log("Downloading music: " + fileName);
         const filePath = path.join(dirPath, fileName);
 
         const writer = fs.createWriteStream(filePath);
@@ -123,7 +118,6 @@ export async function downloadSpotifyMusic(spotifyLink, dirPath) {
 
             pipeline(response.body, writer, (err) => {
               if (err) return reject(err);
-              resolve(filePath);
             });
           });
         resolve();
@@ -138,6 +132,38 @@ export async function downloadVideyVideo(videyLink, dirPath) {
   });
 }
 
-export async function downloadYoutubeVideos(ytLink, dirPath) {
-  
+export async function downloadYoutubeVideos(ytLink, dirPath, isMP3) {
+  return new Promise((resolve, reject) => {
+    youtube(ytLink)
+      .then( async (data) => {
+
+        const fileName = data.title;
+
+        const filePath = path.join(dirPath, fileName);
+
+        const writer = fs.createWriteStream(filePath);
+
+        let dataLink;
+        if(isMP3) dataLink = data.mp3;
+        else dataLink = data.mp4;
+
+        if(dataLink == null || dataLink == "") {
+          reject("No data found");
+        } 
+
+        const response = await fetch(dataLink);
+
+        if(!response.ok) reject("failed to load data body");
+
+        const arrBuf = await response.arrayBuffer();
+
+        writer.write(Buffer.from(arrBuf), (err) => {
+          if (err) return reject(err);
+          writer.end();
+        });
+
+        resolve();
+      })
+      .catch(err => reject(err));
+  });
 }

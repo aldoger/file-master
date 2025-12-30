@@ -34,7 +34,7 @@ async function intro() {
   ▸ ${chalk.white("decyrpt")} Decyrpt your file.
   ▸ ${chalk.white("compress")} Compress file
   ▸ ${chalk.white("zip")} Zip files
-  ▸ ${chalk.white("download file")} Download file (image, Spotify, megafile, google drive) 
+  ▸ ${chalk.white("download file")} Download files/videos from internet
         `)
         );
 
