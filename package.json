@@ -15,6 +15,7 @@
   "dependencies": {
     "btch-downloader": "^6.0.17",
     "chalk": "^5.6.0",
+    "commander": "^14.0.2",
     "figlet": "^1.8.2",
     "gradient-string": "^3.0.0",
     "inquirer": "^12.9.3",

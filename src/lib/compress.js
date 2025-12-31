@@ -1,5 +1,5 @@
 import { createGzip, createUnzip } from 'zlib'
-import { createReadStream, createWriteStream, stat } from 'fs';
+import { createReadStream, createWriteStream } from 'fs';
 import path from 'path';
 import { pipeline } from 'stream/promises';
 
