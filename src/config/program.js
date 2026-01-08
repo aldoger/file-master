@@ -5,18 +5,28 @@ FileMasterProgram
     .name("filemaster")
     .usage("[command] [options] [arguments]");
 
-export function AddProgram(command, description, argument, options, action) {
-    FileMasterProgram.command(command)
-        .description(description);
+export function AddProgram(
+  command,
+  description,
+  argument,
+  argDescription,
+  options,
+  action
+) {
+  const cmd = FileMasterProgram
+    .command(command)
+    .description(description ?? '');
 
-    FileMasterProgram
-        .argument(argument);
+  if (argument) {
+    cmd.argument(argument, argDescription);
+  }
 
-    for(const option of options) {
-        FileMasterProgram
-            .option(option.flag, option.description);
+  if (Array.isArray(options)) {
+    for (const option of options) {
+      cmd.option(option.flag, option.description);
     }
+  }
 
-    FileMasterProgram
-        .action(action);
+  cmd.action(action);
 }
+

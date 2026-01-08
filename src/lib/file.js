@@ -1,5 +1,6 @@
 import { opendir, copyFile as copyFileSafe, constants, glob } from 'fs/promises';
 import fs from "fs";
+import { pipeline } from 'stream/promises';
 import path from "path";
 
 export async function getDirectory(Dir) {
@@ -49,18 +50,22 @@ export async function getEncFiles(arrayFilesEnc = [], arrayFileSecret = []) {
   return {arrayFilesEnc, arrayFileSecret}
 }
 
-export function makeFile(data, ext, filename) {
-  return new Promise((resolve, reject) => {
-    fs.writeFile(path.resolve(`${filename}.${ext}`), data, (err) => {
-      if (err) {
-        console.error(err);
-        reject(false);
-      } else {
-        resolve(true);
-      }
-    });
-  });
+export async function makeFile(stream, filePath) {
+  const writer = fs.createWriteStream(filePath);
+
+  try {
+    await pipeline(stream, writer);
+    return { ok: true };
+  } catch (err) {
+    writer.destroy();
+    fs.unlink(filePath, () => {});
+    return {
+      ok: false,
+      error: err.message,
+    };
+  }
 }
+
 
 export async function moveFile(oldPath, newPath) {
     fs.rename(oldPath, newPath, (err) => {

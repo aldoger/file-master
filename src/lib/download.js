@@ -1,71 +1,60 @@
 import fs from 'fs';
-import http from 'http';
-import https from 'https';
 import { gdrive, spotify, youtube } from 'btch-downloader';
 import { File } from 'megajs';
 import { pipeline } from 'stream/promises';
 import path from 'path';
+import { makeFile } from './file';
+
+export const Media = {
+  IMAGE: 'image',
+  YOUTUBE: 'youtube',
+  MEGA: 'mega',
+  GDRIVE: 'gdrive',
+  SPOTIFY: 'spotify'
+}
+
+// TODO ubah semua menjadi promise based bukan callback (kalau bisa)
+function getFileName(url, res) {
+  const disposition = res.headers.get('content-disposition');
+
+  if (disposition && disposition.includes('filename=')) {
+    return disposition.split('filename=')[1].replace(/"/g, '');
+  }
+
+  const pathname = new URL(url).pathname;
+  return path.basename(pathname) 
+}
 
 export async function downloadImage(url, dirPath) {
-  const client = url.startsWith('https') ? https : http;
-  const fileName = path.basename(new URL(url).pathname);
+  const res = await fetch(url);
+
+  if (!res.ok) {
+    return { ok: false, error: `Download failed: ${res.status}` };
+  }
+
+  fs.mkdirSync(dirPath, { recursive: true });
+
+  const fileName = getFileName(url, res);
   const filePath = path.join(dirPath, fileName);
 
-  return new Promise((resolve, reject) => {
-    const file = fs.createWriteStream(filePath);
+  const result = await makeFile(res.body, filePath);
 
-    const request = client.get(url, (response) => {
-      if (response.statusCode !== 200) {
-        reject(new Error(`Failed to get '${url}' (${response.statusCode})`));
-        return;
-      }
+  if (!result.ok) {
+    return result;
+  }
 
-      response.pipe(file);
-
-      file.on('finish', () => {
-        file.close(() => resolve(filePath));
-      });
-    });
-
-    request.on('error', (err) => {
-      fs.unlink(filePath, () => reject(err));
-    });
-  });
+  return {
+    ok: true,
+    path: filePath,
+  };
 }
 
 
+
 export async function downloadMegaFile(megaFileLink, dirPath) {
-  return new Promise((resolve, reject) => {
-    const files = File.fromURL(megaFileLink);
-
-    files.loadAttributes(async (err, file) => {
-      if (err) reject(err);
-
-      const savePath = path.join(dirPath, file.name);
-      const opts = {
-        forceHttps: true,
-        maxConnections: 12,
-        maxChunkSize: 1024 * 1024, // 1 MB
-        initialChunkSize: 1024 * 1024,
-        chunkSizeIncrement: 0,
-      }
-
-      try {
-
-        const buf = await file.downloadBuffer(opts);
-        const writer = fs.createWriteStream(savePath);
-        writer.write(buf);
-        writer.end();
-        writer.on("finish", () => {
-          resolve();
-        });
-        writer.on("error", reject);
-        resolve(file.name);
-      }catch(err) {
-        reject(err);
-      }
-    });
-  });
+  const files = File.fromURL(megaFileLink);
+  
+  
 }
 
 export async function downloadGDriveFile(driveLink, dirPath) {
