@@ -10,7 +10,6 @@ export async function zipFiles(arrFilePath, outPath) {
         zip.archive(outPath + ".zip").then(() => {
             resolve();
         }, (err) => {
-            console.error("Error zipping files: ", err.message);
             reject(err);
         })
     });
@@ -27,7 +26,7 @@ export async function zipFolders(arrFolderPath, outPath) {
         zip.archive(outPath + ".zip").then(() => {
             resolve();
         }, (err) => {
-            return reject(err.message);
+            reject(err.message);
         });
     });
 }
@@ -37,7 +36,6 @@ export function unZip(zipFile, outDir) {
         extract(zipFile, outDir).then(() => {
             resolve()
         }, (err) => {
-            console.error("Error zipping file: ", err.message);
             reject(err);
         });
     })

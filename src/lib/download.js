@@ -3,7 +3,7 @@ import { gdrive, spotify, youtube } from 'btch-downloader';
 import { File } from 'megajs';
 import { pipeline } from 'stream/promises';
 import path from 'path';
-import { makeFile } from './file';
+import { makeFile } from './file.js';
 
 export const Media = {
   IMAGE: 'image',

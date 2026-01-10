@@ -45,10 +45,10 @@ async function zip(paths, options) {
             }
         });
 
-        const result = await zipFolders(paths, options.out);
-        if(!result) {
-            errorMessage(chalk.red(`error: ${result}`));
-            return;
+        try {
+            await zipFolders(paths, options.out);
+        } catch (err) {
+            errorMessage(err.message);
         }
 
         successMessage(`zip folders success`);
@@ -58,22 +58,22 @@ async function zip(paths, options) {
         paths.forEach(path => {
             if(!isFile(path)) {
                 errorMessage(chalk.red(`path: ${path} is not a file`));
-                return;
+                process.exit(1);
             }
         });
 
-        const result = await zipFiles(paths, options.out);
-        if(!result) {
-            errorMessage(chalk.red(`error: ${result}`));
-            return;
+        try {
+            await zipFiles(paths, options.out);
+        } catch (err) {
+            errorMessage(err.message);
+            process.exit(1);
         }
 
         successMessage(`zip files success`);
     }
 
+    process.exit(0);
 }
-
-
 
 async function main() {
 
@@ -113,8 +113,12 @@ async function main() {
 
     AddProgram('zip', 
         'zip files or folder you want',
-        ''
-    )
+        '<paths...>', 'path to folder or files (you can only contain one type)',
+        zipOpt, zip
+    );
+
+    // encrypt file
+    
 }
 
 main();
