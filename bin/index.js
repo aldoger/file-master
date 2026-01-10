@@ -1,9 +1,12 @@
 #!/usr/bin/env node
+import chalk from 'chalk';
 import { AddProgram, FileMasterProgram } from '../src/config/program.js';
 import { Media } from '../src/lib/download.js';
+import { isDirectory, isFile } from '../src/lib/file.js';
 import info from '../src/utils/info.js';
 import { errorMessage, processMessage, successMessage } from '../src/utils/message.js';
 import process from 'process';
+import { zipFiles, zipFolders } from '../src/lib/archive.js';
 
 async function download(url, options) {
     switch (options.media) {
@@ -33,6 +36,43 @@ async function encyrpt() {
     
 }
 
+async function zip(paths, options) {
+    if(options.type == 'folders') {
+        paths.forEach(path => {
+            if(!isDirectory(path)) {
+                errorMessage(chalk.red(`path: ${path} is not a folder`));
+                return;
+            }
+        });
+
+        const result = await zipFolders(paths, options.out);
+        if(!result) {
+            errorMessage(chalk.red(`error: ${result}`));
+            return;
+        }
+
+        successMessage(`zip folders success`);
+    }
+
+    if(options.type == 'files') {
+        paths.forEach(path => {
+            if(!isFile(path)) {
+                errorMessage(chalk.red(`path: ${path} is not a file`));
+                return;
+            }
+        });
+
+        const result = await zipFiles(paths, options.out);
+        if(!result) {
+            errorMessage(chalk.red(`error: ${result}`));
+            return;
+        }
+
+        successMessage(`zip files success`);
+    }
+
+}
+
 
 
 async function main() {
@@ -58,6 +98,23 @@ async function main() {
         '<url>', 'download url',
         downloadOpt, download
     );
+
+    // zip files or folder
+    const zipOpt = [
+        {
+            flag: '--type <type>',
+            description: 'zip files or folder you want. type files if you want to zip files. type folders if you want to zip folders',
+        },
+        {
+            flag: '--out <out>',
+            description: 'zip file name'
+        }
+    ]
+
+    AddProgram('zip', 
+        'zip files or folder you want',
+        ''
+    )
 }
 
 main();

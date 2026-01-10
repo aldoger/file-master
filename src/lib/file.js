@@ -1,4 +1,4 @@
-import { opendir, copyFile as copyFileSafe, constants, glob } from 'fs/promises';
+import { opendir, copyFile as copyFileSafe, constants, glob, stat } from 'fs/promises';
 import fs from "fs";
 import { pipeline } from 'stream/promises';
 import path from "path";
@@ -92,4 +92,14 @@ export async function copyFile(sourceFile, destinationFile) {
   } catch {
     console.error("The file could not be opened, file already exist");
   }
+}
+
+export function isFile(filePath) {
+  const stat = fs.statSync(filePath);
+  return stat.isFile();
+}
+
+export function isDirectory(dirPath) {
+  const stat = fs.statSync(dirPath);
+  return stat.isDirectory();
 }
