@@ -8,7 +8,6 @@ import info from '../src/utils/info.js';
 import { errorMessage, processMessage, successMessage } from '../src/utils/message.js';
 import process from 'process';
 import { zipFiles, zipFolders } from '../src/lib/archive.js';
-import fs from 'fs';
 import path from 'path';
 
 async function download(url, options) {
