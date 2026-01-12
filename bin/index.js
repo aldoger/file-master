@@ -2,11 +2,14 @@
 import chalk from 'chalk';
 import { AddProgram, FileMasterProgram } from '../src/config/program.js';
 import { Media } from '../src/lib/download.js';
-import { isDirectory, isFile } from '../src/lib/file.js';
+import { encyrptFile } from '../src/lib/encrypt.js';
+import { isDirectory, isFile, makeFile, readFileData } from '../src/lib/file.js';
 import info from '../src/utils/info.js';
 import { errorMessage, processMessage, successMessage } from '../src/utils/message.js';
 import process from 'process';
 import { zipFiles, zipFolders } from '../src/lib/archive.js';
+import fs from 'fs';
+import path from 'path';
 
 async function download(url, options) {
     switch (options.media) {
@@ -32,11 +35,30 @@ async function download(url, options) {
     process.exit(0);
 }
 
-async function encyrpt() {
-    
+async function encyrpt(filePath, options) {
+    processMessage('encrypting...');
+
+    const encFilePath = path.join(__dirname, options.name);
+    const secretFilePath = path.join(__dirname, `${options.name}_secret.txt`)
+    try {
+        const data = await readFileData(filePath);
+        const encrypt = await encyrptFile(options.algo, data, options.name);
+        const readSecret = new ReadableStream(encrypt.secretData);
+        const readEnc = new ReadableStream(encrypt.encryptData);
+        await makeFile(readEnc, encFilePath);
+        await makeFile(readFileData, secretFilePath);
+    } catch (err) {
+        errorMessage(err.message);
+        process.exit(1);
+    }
+
+    successMessage(`file encrypt success`);
+    process.exit(0);
 }
 
 async function zip(paths, options) {
+    processMessage(chalk.blueBright('zipping...'));
+
     if(options.type == 'folders') {
         paths.forEach(path => {
             if(!isDirectory(path)) {
@@ -83,7 +105,7 @@ async function main() {
         'Filemaster features information',
         null, null, null,
         info
-    )
+    );
 
     // download files
     const downloadOpt = [
@@ -91,7 +113,7 @@ async function main() {
             flag: '--media <media>',
             description: 'media file you want to download (youtube, spotify, google drive, megafile, random image from internet'
         }
-    ]
+    ];
 
     AddProgram('download', 
         'download files from the internet',
@@ -109,7 +131,7 @@ async function main() {
             flag: '--out <out>',
             description: 'zip file name'
         }
-    ]
+    ];
 
     AddProgram('zip', 
         'zip files or folder you want',
@@ -118,7 +140,22 @@ async function main() {
     );
 
     // encrypt file
-    
+    const encryptOpt = [
+        {
+            flag: '--algo <algorithm>',
+            description: 'algorithm you choose (aes128, aes192, aes256)'
+        },
+        {
+            flag: '--name <name>',
+            description: 'file encrypted name'
+        }
+    ];
+
+    AddProgram('encrypt',
+        'encrypt your file', 
+        '<filePath>', 'path to your file you want to encrypt',
+        encryptOpt, encyrpt
+    );
 }
 
 main();

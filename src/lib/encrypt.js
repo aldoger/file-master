@@ -23,12 +23,13 @@ export async function encyrptFile(algorithm, message, filename) {
     const secretData = { key: key.toString('hex'), iv: iv.toString('hex'), algo: algorithm };
     
     const secretDataString = JSON.stringify(secretData);
-    
-    await makeFile(secretDataString, 'txt', `${filename}_secret`);
 
     const encyrptedMessage = cipher.update(message, 'utf8', 'hex') + cipher.final('hex');
 
-    await makeFile(encyrptedMessage, 'enc', filename);
+    return {
+        secretData: secretDataString,
+        encryptData: encyrptedMessage
+    };
 }
 
 export function decyrptFile(algorithm, key, iv, message) {
