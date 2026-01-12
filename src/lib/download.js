@@ -62,15 +62,14 @@ export async function downloadGDriveFile(driveLink, dirPath) {
         
 
         const fileName = response.result.filename;
-        const filePath = path.join(__dirname, fileName);
+        const filePath = path.join(dirPath, fileName);
         fetch(response.result.downloadUrl)
           .then(async (res) => {
             
             try {
               const result = await makeFile(res.body, filePath);
-              if(!result.ok) {
-                return result.error;
-              }
+              if(!result.ok) reject(result.error);
+
               resolve({
                 ok: true,
                 path: filePath
@@ -92,12 +91,36 @@ export async function downloadSpotifyMusic(spotifyLink, dirPath) {
       .then((response) => {
         if(!response.status) reject('failed to fetch spotify link');
 
-        
+        const fileName = response.result.title;
+        const filePath = path.join(dirPath, fileName);
+
+        fetch(response.result.source)
+          .then(async (res) => {
+
+            try {
+              const result = await makeFile(res.body, filePath);
+              if(!result.ok) reject(result.error);
+              
+              reject({
+                ok: true,
+                path: filePath
+              });
+            } catch (err) {
+              reject(err);
+            }
+          })
+          .catch((err) => reject(err))
       })
       .catch((err) => reject(err));
  }) 
 }
 
 export async function downloadYoutubeVideos(ytLink, dirPath, isMP3) {
-  
+  return new Promise((resolve, reject) => {
+    youtube(ytLink)
+      .then((response) => {
+        
+      })
+      .catch((err) => reject(err));
+  })
 }
