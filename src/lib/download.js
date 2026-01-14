@@ -1,6 +1,7 @@
 import fs from 'fs';
 import { gdrive, spotify, youtube } from 'btch-downloader';
 import { File } from 'megajs';
+import os from 'os';
 import path from 'path';
 import { makeFile } from './file.js';
 
@@ -11,6 +12,8 @@ export const Media = {
   GDRIVE: 'gdrive',
   SPOTIFY: 'spotify'
 }
+
+const userHomeDir = os.homedir();
 
 // TODO ubah semua menjadi promise based bukan callback (kalau bisa)
 function getFileName(url, res) {
@@ -24,17 +27,15 @@ function getFileName(url, res) {
   return path.basename(pathname) 
 }
 
-export async function downloadImage(url, dirPath) {
+export async function downloadImage(url) {
   const res = await fetch(url);
 
   if (!res.ok) {
     return { ok: false, error: `Download failed: ${res.status}` };
   }
 
-  fs.mkdirSync(dirPath, { recursive: true });
-
   const fileName = getFileName(url, res);
-  const filePath = path.join(dirPath, fileName);
+  const filePath = path.join(userHomeDir, fileName);
 
   const result = await makeFile(res.body, filePath);
 
@@ -50,11 +51,11 @@ export async function downloadImage(url, dirPath) {
 
 
 
-export async function downloadMegaFile(megaFileLink, dirPath) {
+export async function downloadMegaFile(megaFileLink) {
   const files = File.fromURL(megaFileLink);
 }
 
-export async function downloadGDriveFile(driveLink, dirPath) {
+export async function downloadGDriveFile(driveLink) {
   return new Promise((resolve, reject) => {
     gdrive(driveLink)
       .then((response) => {
@@ -62,7 +63,7 @@ export async function downloadGDriveFile(driveLink, dirPath) {
         
 
         const fileName = response.result.filename;
-        const filePath = path.join(dirPath, fileName);
+        const filePath = path.join(userHomeDir, fileName);
         fetch(response.result.downloadUrl)
           .then(async (res) => {
             
@@ -85,14 +86,14 @@ export async function downloadGDriveFile(driveLink, dirPath) {
   });
 }
 
-export async function downloadSpotifyMusic(spotifyLink, dirPath) {
+export async function downloadSpotifyMusic(spotifyLink) {
  return new Promise((resolve, reject) => {
     spotify(spotifyLink)
       .then((response) => {
         if(!response.status) reject('failed to fetch spotify link');
 
         const fileName = response.result.title;
-        const filePath = path.join(dirPath, fileName);
+        const filePath = path.join(userHomeDir, fileName);
 
         fetch(response.result.source)
           .then(async (res) => {
@@ -101,7 +102,7 @@ export async function downloadSpotifyMusic(spotifyLink, dirPath) {
               const result = await makeFile(res.body, filePath);
               if(!result.ok) reject(result.error);
               
-              reject({
+              resolve({
                 ok: true,
                 path: filePath
               });
@@ -115,11 +116,50 @@ export async function downloadSpotifyMusic(spotifyLink, dirPath) {
  }) 
 }
 
-export async function downloadYoutubeVideos(ytLink, dirPath, isMP3) {
+export async function downloadYoutubeVideos(ytLink, isMP3) {
   return new Promise((resolve, reject) => {
     youtube(ytLink)
       .then((response) => {
-        
+        if(!response.status) reject('failed to fetch youtube link');
+
+        const fileName = response.title;
+        const filePath = path.join(userHomeDir, fileName);
+
+        if(isMP3) {
+          fetch(response.mp3)
+            .then(async (res) => {
+              
+              try {
+                const result = await makeFile(res.body, filePath);
+                if(!result.ok) reject(result);
+
+                resolve({
+                  ok: true,
+                  path: filePath
+                });
+              } catch (err) {
+                reject(err);
+              }
+            })
+            .catch((err) => reject(err));
+        } else {
+          fetch(response.mp4)
+            .then(async (res) => {
+              
+              try {
+                const result = await makeFile(res.body, filePath);
+                if(!result.ok) reject(result);
+
+                resolve({
+                  ok: true,
+                  path: filePath
+                });
+              } catch (err) {
+                reject(err);
+              }
+            })
+            .catch((err) => reject(err));
+        }
       })
       .catch((err) => reject(err));
   })
