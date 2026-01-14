@@ -8,6 +8,7 @@ import info from '../src/utils/info.js';
 import { errorMessage, processMessage, successMessage } from '../src/utils/message.js';
 import process from 'process';
 import { zipFiles, zipFolders } from '../src/lib/archive.js';
+import { convertDocsToPDF } from '../src/lib/convert.js';
 import path from 'path';
 
 async function download(url, options) {
@@ -96,6 +97,19 @@ async function zip(paths, options) {
     process.exit(0);
 }
 
+async function convert(file, options) {
+    if(path.extname(file) == '.pdf') {
+        errorMessage(`file already pdf type`);
+        process.exit(1);
+    }
+
+    convertDocsToPDF(file, options.name);
+
+    successMessage(`convert success`);
+
+    process.exit(0);
+}
+
 async function main() {
 
 
@@ -154,6 +168,24 @@ async function main() {
         'encrypt your file', 
         '<filePath>', 'path to your file you want to encrypt',
         encryptOpt, encyrpt
+    );
+
+    // convert docs to pdf
+    const convertOpt = [
+        {
+            flag: '--type <type>',
+            description: 'type of file to convert (current only pdf)'
+        },
+        {
+            flag: '--name <name>',
+            description: 'pdf file name'
+        }
+    ];
+
+    AddProgram('convert',
+        'convert docs file into pdf',
+        '<file>', 'file you want to convert',
+        convertOpt, convert
     );
 }
 
