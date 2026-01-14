@@ -1,9 +1,9 @@
-import fs from 'fs';
 import { gdrive, spotify, youtube } from 'btch-downloader';
 import { File } from 'megajs';
 import os from 'os';
 import path from 'path';
 import { makeFile } from './file.js';
+import { pipeline, Readable, Transform } from 'stream';
 
 export const Media = {
   IMAGE: 'image',
@@ -15,7 +15,20 @@ export const Media = {
 
 const userHomeDir = os.homedir();
 
-// TODO ubah semua menjadi promise based bukan callback (kalau bisa)
+function returnFailure(err) {
+  return {
+    ok: false,
+    error: err.message
+  }
+};
+
+function returnSuccess(path) {
+  return {
+    ok: true,
+    path: path
+  }
+};
+
 function getFileName(url, res) {
   const disposition = res.headers.get('content-disposition');
 
@@ -37,10 +50,12 @@ export async function downloadImage(url) {
   const fileName = getFileName(url, res);
   const filePath = path.join(userHomeDir, fileName);
 
-  const result = await makeFile(res.body, filePath);
+  const stream = Readable.fromWeb(res.body);
+
+  const result = await makeFile(stream, filePath);
 
   if (!result.ok) {
-    return result.error;
+    return returnFailure(result.error);
   }
 
   return {
@@ -49,118 +64,96 @@ export async function downloadImage(url) {
   };
 }
 
-
-
 export async function downloadMegaFile(megaFileLink) {
-  const files = File.fromURL(megaFileLink);
+  try {
+    const file = File.fromURL(megaFileLink);
+    await file.loadAttributes();
+
+    const filePath = path.join(userHomeDir, file.name);
+
+    const readStream = file.download(); 
+
+    const result = await makeFile(readStream, filePath);
+
+    if(!result.ok) return returnFailure(result.error);
+
+    return returnSuccess(filePath);
+  } catch (err) {
+    return returnFailure(err);
+  }
 }
 
 export async function downloadGDriveFile(driveLink) {
-  return new Promise((resolve, reject) => {
-    gdrive(driveLink)
-      .then((response) => {
-        if(!response.status) reject('failed to fetch google drive');
-        
+  try {
+    const gDriveFile = await gdrive(driveLink);
 
-        const fileName = response.result.filename;
-        const filePath = path.join(userHomeDir, fileName);
-        fetch(response.result.downloadUrl)
-          .then(async (res) => {
-            
-            try {
-              const result = await makeFile(res.body, filePath);
-              if(!result.ok) reject(result.error);
+    if(!gDriveFile.status) return returnFailure(new Error("failed to fetch google drive link"));
 
-              resolve({
-                ok: true,
-                path: filePath
-              });
-            } catch (err) {
-              reject(err);
-            }
+    const fileName = gDriveFile.result.filename;
+    const filePath = path.join(userHomeDir, fileName);
 
-          })
-          .catch((err) => reject(err));
-      })
-      .catch((err) => reject(err));
-  });
+    const response = await fetch(gDriveFile.result.downloadUrl);
+
+    if(!response.ok) return returnFailure(new Error(`failed to fetch: ${response.statusText}`));
+
+    const stream = Readable.fromWeb(response.body);
+
+    const result = await makeFile(stream, filePath);
+
+    if(!result.ok) return returnFailure(result.error);
+
+    return returnSuccess(filePath);
+  } catch (err) {
+    return returnFailure(err);
+  }
 }
 
 export async function downloadSpotifyMusic(spotifyLink) {
- return new Promise((resolve, reject) => {
-    spotify(spotifyLink)
-      .then((response) => {
-        if(!response.status) reject('failed to fetch spotify link');
+  try {
+    const spotifyMusic = await spotify(spotifyLink);
 
-        const fileName = response.result.title;
-        const filePath = path.join(userHomeDir, fileName);
+    if(!spotifyMusic.status) return returnFailure(new Error("failed to fetch spotify link"));
 
-        fetch(response.result.source)
-          .then(async (res) => {
+    const fileName = spotifyMusic.result.title;
+    const filePath = path.join(userHomeDir, fileName);
 
-            try {
-              const result = await makeFile(res.body, filePath);
-              if(!result.ok) reject(result.error);
-              
-              resolve({
-                ok: true,
-                path: filePath
-              });
-            } catch (err) {
-              reject(err);
-            }
-          })
-          .catch((err) => reject(err))
-      })
-      .catch((err) => reject(err));
- }) 
+    const response = await fetch(spotifyMusic.result.source);
+
+    const stream = Readable.fromWeb(response.body);
+
+    const result = await makeFile(stream, filePath);
+
+    if(!result.ok) return returnFailure(result.error);
+    
+    return returnSuccess(filePath);
+  } catch (err) {
+    return returnFailure(err);
+  }
 }
 
 export async function downloadYoutubeVideos(ytLink, isMP3) {
-  return new Promise((resolve, reject) => {
-    youtube(ytLink)
-      .then((response) => {
-        if(!response.status) reject('failed to fetch youtube link');
+  try {
+    const ytVid = await youtube(ytLink);
 
-        const fileName = response.title;
-        const filePath = path.join(userHomeDir, fileName);
+    if(!ytVid.status) return returnFailure(new Error("failed to fetch youtube link"));
 
-        if(isMP3) {
-          fetch(response.mp3)
-            .then(async (res) => {
-              
-              try {
-                const result = await makeFile(res.body, filePath);
-                if(!result.ok) reject(result);
+    const fileName = ytVid.title;
+    const filePath = path.join(userHomeDir, fileName);
 
-                resolve({
-                  ok: true,
-                  path: filePath
-                });
-              } catch (err) {
-                reject(err);
-              }
-            })
-            .catch((err) => reject(err));
-        } else {
-          fetch(response.mp4)
-            .then(async (res) => {
-              
-              try {
-                const result = await makeFile(res.body, filePath);
-                if(!result.ok) reject(result);
+    let ytMedia;
+    if(isMP3) ytMedia = ytVid.mp3;
+    else ytMedia = ytVid.mp4;
 
-                resolve({
-                  ok: true,
-                  path: filePath
-                });
-              } catch (err) {
-                reject(err);
-              }
-            })
-            .catch((err) => reject(err));
-        }
-      })
-      .catch((err) => reject(err));
-  })
+    const response = await fetch(ytMedia);
+
+    const stream = Readable.fromWeb(response.body);
+
+    const result = await makeFile(stream, filePath);
+
+    if(!result.ok) return returnFailure(result.error);
+
+    return returnSuccess(filePath);
+  } catch (err) {
+    return returnFailure(err);
+  }
 }

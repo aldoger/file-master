@@ -61,7 +61,7 @@ export async function makeFile(stream, filePath) {
     fs.unlink(filePath, () => {});
     return {
       ok: false,
-      error: err.message,
+      error: err,
     };
   }
 }
