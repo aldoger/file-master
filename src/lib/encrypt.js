@@ -8,7 +8,7 @@ export const Algo = [
     "aes256"
 ]
 
-export async function encyrptFile(algorithm, message, filename) { 
+export function encyrptFile(algorithm, message) { 
     var size;
 
     if(algorithm.includes("128")) size = 16;
@@ -51,12 +51,4 @@ export function decyrptFile(algorithm, key, iv, message) {
             console.info(chalk.red("Bad decrypt: wrong key or IV"));
         }
     }
-}
-
-export function encryptImage() {
-    
-}
-
-export function decryptImage() {
-
 }

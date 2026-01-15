@@ -3,10 +3,10 @@ import { File } from 'megajs';
 import os from 'os';
 import path from 'path';
 import { makeFile } from './file.js';
-import { pipeline, Readable, Transform } from 'stream';
+import { Readable } from 'stream';
 
 export const Media = {
-  IMAGE: 'image',
+  INTERNET: 'internet',
   YOUTUBE: 'youtube',
   MEGA: 'mega',
   GDRIVE: 'gdrive',
@@ -40,7 +40,7 @@ function getFileName(url, res) {
   return path.basename(pathname) 
 }
 
-export async function downloadImage(url) {
+export async function downloadFromInternet(url) {
   const res = await fetch(url);
 
   if (!res.ok) {

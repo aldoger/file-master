@@ -67,7 +67,7 @@ export async function makeFile(stream, filePath) {
 }
 
 
-export async function moveFile(oldPath, newPath) {
+export function moveFile(oldPath, newPath) {
     fs.rename(oldPath, newPath, (err) => {
         if(err) {
             console.error(err);
@@ -76,17 +76,11 @@ export async function moveFile(oldPath, newPath) {
     });
 }
 
-export function readFileData(filename) {
-  return new Promise((resolve, reject) => {
-    fs.readFile(path.resolve(filename), 'utf8', (err, data) => {
-      if (err) return reject(err);
-      resolve(data);
-    });
-  });
+export function readFileData(filePath) {
+  return fs.readFileSync(filePath, 'utf8');
 }
 
 export async function copyFile(sourceFile, destinationFile) {
-  
   try {
     await copyFileSafe(sourceFile, destinationFile, constants.COPYFILE_EXCL);
   } catch {

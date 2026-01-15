@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import chalk from 'chalk';
 import { AddProgram, FileMasterProgram } from '../src/config/program.js';
-import { Media } from '../src/lib/download.js';
+import { downloadFromInternet, downloadGDriveFile, downloadMegaFile, downloadSpotifyMusic, downloadYoutubeVideos, Media } from '../src/lib/download.js';
 import { encyrptFile } from '../src/lib/encrypt.js';
 import { isDirectory, isFile, makeFile, readFileData } from '../src/lib/file.js';
 import info from '../src/utils/info.js';
@@ -10,28 +10,82 @@ import process from 'process';
 import { zipFiles, zipFolders } from '../src/lib/archive.js';
 import { convertDocsToPDF } from '../src/lib/convert.js';
 import path from 'path';
+import { streamFromString, readInput } from '../src/utils/stream.js';
 
 async function download(url, options) {
-    switch (options.media) {
-        case Media.YOUTUBE:
-            successMessage("download youtube success\n");
-            break;
-        case Media.IMAGE:
-            successMessage("download image success\n");
-            break;
-        case Media.GDRIVE:
-            successMessage("download google drive file success\n");
-            break;
-        case Media.MEGA:
-            successMessage("download mega file success\n");
-            break;
-        case Media.SPOTIFY:
-            successMessage("download spotify music success\n");
-            break;
-        default:
-            errorMessage(`invalid media: ${options.media}`);
-            process.exit(1);
+
+    processMessage('downloading...');
+    let downloadPath;
+    try {
+        switch (options.media) {
+            case Media.YOUTUBE:
+                let isMp3
+                let input = await readInput('do you want to download mp3? (Y/N)');
+
+                if(input == 'Y' || input == 'y') isMp3 = true;
+                else if(input == 'N' || input == 'n') isMp3 = false;
+                else {
+                    errorMessage('Invalid input');
+                    process.exit(0);
+                } 
+
+                const resultYt = await downloadYoutubeVideos(url, isMp3);
+                if(!resultYt.ok) {
+                    errorMessage('Error download: ', resultYt.error);
+                    process.exit(1);
+                }
+
+                downloadPath = resultYt.path;
+                break;
+            case Media.INTERNET:
+                
+                const resultIn = await downloadFromInternet(url);
+                if(!resultIn.ok) {
+                    errorMessage('Error download: ', resultIn.error);
+                    process.exit(1);
+                }
+
+                downloadPath = resultIn.path;
+                break;
+            case Media.GDRIVE:
+            
+                const resultGD = await downloadGDriveFile(url);
+                if(!resultGD.ok) {
+                    errorMessage('Error download: ', resultGD.error);
+                    process.exit(1);
+                }
+
+                downloadPath = resultGD.path;
+                break;
+            case Media.MEGA:
+
+                const resultMEG = await downloadMegaFile(url);
+                if(!resultMEG.ok) {
+                    errorMessage('Error download: ', resultMEG.error);
+                    process.exit(1);
+                }
+
+                downloadPath = resultMEG.path;
+                break;
+            case Media.SPOTIFY:
+                
+                const resultSPO = await downloadSpotifyMusic(url);
+                if(!resultSPO.ok) {
+                    errorMessage('Error download: ', resultSPO.error);
+                    process.exit(1);
+                }
+
+                downloadPath = resultSPO.path;
+                break;
+            default:
+                errorMessage(`invalid media: ${options.media}`);
+                process.exit(1);
+        }
+    } catch (err) {
+        errorMessage('Error downloading: ', err.message);
     }
+
+    successMessage('download success. File: ', downloadPath);
     process.exit(0);
 }
 
@@ -40,20 +94,25 @@ async function encyrpt(filePath, options) {
 
     const encFilePath = path.join(__dirname, options.name);
     const secretFilePath = path.join(__dirname, `${options.name}_secret.txt`)
+
     try {
-        const data = await readFileData(filePath);
-        const encrypt = await encyrptFile(options.algo, data, options.name);
-        const readSecret = new ReadableStream(encrypt.secretData);
-        const readEnc = new ReadableStream(encrypt.encryptData);
-        await makeFile(readEnc, encFilePath);
-        await makeFile(readFileData, secretFilePath);
+        const data = readFileData(filePath);
+        const encrypt = encyrptFile(options.algo, data);
+
+        const encData = streamFromString(encrypt.encryptData);
+
+        await makeFile(encData, encFilePath);
+
+        const secretData = streamFromString(encrypt.secretData);
+
+        await makeFile(secretData, secretFilePath);
+
+        successMessage('encryption success');
+        process.exit(0);
     } catch (err) {
         errorMessage(err.message);
         process.exit(1);
     }
-
-    successMessage(`file encrypt success`);
-    process.exit(0);
 }
 
 async function zip(paths, options) {
