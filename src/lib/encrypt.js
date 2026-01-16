@@ -42,13 +42,11 @@ export function decyrptFile(algorithm, key, iv, message) {
     try {
         const decyrptMessage = decipher.update(message, 'hex', 'utf8') + decipher.final('utf8');
 
-        console.log("\n" + chalk.green("=== Decyrpt Message ==="));
-        console.info(decyrptMessage)
-        console.log(chalk.green("===================\n"));
+        return decyrptMessage;
     } catch (err) {
-        
         if(err === "ERR_OSSL_BAD_DECRYPT") {
             console.info(chalk.red("Bad decrypt: wrong key or IV"));
+            process.exit(1);
         }
     }
 }

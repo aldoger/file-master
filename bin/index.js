@@ -2,7 +2,7 @@
 import chalk from 'chalk';
 import { AddProgram, FileMasterProgram } from '../src/config/program.js';
 import { downloadFromInternet, downloadGDriveFile, downloadMegaFile, downloadSpotifyMusic, downloadYoutubeVideos, Media } from '../src/lib/download.js';
-import { encyrptFile } from '../src/lib/encrypt.js';
+import { decyrptFile, encyrptFile } from '../src/lib/encrypt.js';
 import { isDirectory, isFile, makeFile, readFileData } from '../src/lib/file.js';
 import info from '../src/utils/info.js';
 import { errorMessage, processMessage, successMessage } from '../src/utils/message.js';
@@ -113,6 +113,23 @@ async function encyrpt(filePath, options) {
         errorMessage(err.message);
         process.exit(1);
     }
+}
+
+async function decrypt(filePath, options) {
+    processMessage('decrypting...');
+
+    
+    const algo = options.algo;
+    const key = options.key;
+    const iv = options.iv;
+
+    const decyrptMessage = decyrptFile(algo, key, iv);
+    console.log("\n" + chalk.green("=== Decyrpt Message ==="));
+    console.info(decyrptMessage)
+    console.log(chalk.green("===================\n"));
+
+    successMessage('decrypt success');
+    process.exit(1);
 }
 
 async function zip(paths, options) {

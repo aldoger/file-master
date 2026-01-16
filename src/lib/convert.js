@@ -10,3 +10,7 @@ export async function convertDocsToPDF(filePath, outName) {
         return false;
     }
 }
+
+export async function convertPDFToDocs(filePath, outName) {
+    // Cari library untuk convert ini;
+}
