@@ -1,8 +1,8 @@
-import { gdrive, spotify, youtube } from 'btch-downloader';
+import { gdrive, spotify, youtube, ttdl } from 'btch-downloader';
 import { File } from 'megajs';
 import os from 'os';
 import path from 'path';
-import { makeFile } from './file.js';
+import { checkAndMakeDir, makeFile } from './file.js';
 import { Readable } from 'stream';
 
 export const Media = {
@@ -10,10 +10,11 @@ export const Media = {
   YOUTUBE: 'youtube',
   MEGA: 'mega',
   GDRIVE: 'gdrive',
-  SPOTIFY: 'spotify'
+  SPOTIFY: 'spotify',
+  TIKTOK: 'tiktok'
 }
 
-const userHomeDir = os.homedir();
+const userHomeDir = checkAndMakeDir(`${os.homedir}/Downloads`);
 
 function returnFailure(err) {
   return {
@@ -153,6 +154,24 @@ export async function downloadYoutubeVideos(ytLink, isMP3) {
     if(!result.ok) return returnFailure(result.error);
 
     return returnSuccess(filePath);
+  } catch (err) {
+    return returnFailure(err);
+  }
+}
+
+export async function downloadTiktokVideos(tiktokLink) {
+  try {
+    const tiktokVid = await ttdl(tiktokLink);
+
+    if(!tiktokVid.status) return returnFailure("failed to fetch tiktok link");
+
+    console.log(tiktokVid);
+
+    return returnSuccess('wait');
+
+    const fileName = tiktokVid.title;
+    const filePath = path.join(userHomeDir, fileName);
+
   } catch (err) {
     return returnFailure(err);
   }

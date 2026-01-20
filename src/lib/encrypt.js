@@ -10,7 +10,8 @@ export const Algo = [
 
 export function encyrptFile(algorithm, message) { 
     var size;
-
+    
+    if(algorithm == null) size = 16;
     if(algorithm.includes("128")) size = 16;
     if(algorithm.includes("192")) size = 24;
     if(algorithm.includes("256")) size = 32;

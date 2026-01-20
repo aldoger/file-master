@@ -17,6 +17,11 @@ export async function getDirectory(Dir) {
     }
 };
 
+export function checkAndMakeDir(Dir) {
+  if(!fs.existsSync(Dir)) fs.mkdirSync(Dir);
+  return Dir;
+}
+
 export function getAllFiles(dirPath, arrayOfFiles = []) {
   const files = fs.readdirSync(dirPath, { withFileTypes: true });
 
