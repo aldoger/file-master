@@ -1,5 +1,6 @@
-import { opendir, copyFile as copyFileSafe, constants, glob } from 'fs/promises';
+import { opendir, copyFile as copyFileSafe, constants, glob, stat } from 'fs/promises';
 import fs from "fs";
+import { pipeline } from 'stream/promises';
 import path from "path";
 
 export async function getDirectory(Dir) {
@@ -15,6 +16,11 @@ export async function getDirectory(Dir) {
         console.error(err);      
     }
 };
+
+export function checkAndMakeDir(Dir) {
+  if(!fs.existsSync(Dir)) fs.mkdirSync(Dir);
+  return Dir;
+}
 
 export function getAllFiles(dirPath, arrayOfFiles = []) {
   const files = fs.readdirSync(dirPath, { withFileTypes: true });
@@ -49,20 +55,24 @@ export async function getEncFiles(arrayFilesEnc = [], arrayFileSecret = []) {
   return {arrayFilesEnc, arrayFileSecret}
 }
 
-export function makeFile(data, ext, filename) {
-  return new Promise((resolve, reject) => {
-    fs.writeFile(path.resolve(`${filename}.${ext}`), data, (err) => {
-      if (err) {
-        console.error(err);
-        reject(false);
-      } else {
-        resolve(true);
-      }
-    });
-  });
+export async function makeFile(stream, filePath) {
+  const writer = fs.createWriteStream(filePath);
+
+  try {
+    await pipeline(stream, writer);
+    return { ok: true };
+  } catch (err) {
+    writer.destroy();
+    fs.unlink(filePath, () => {});
+    return {
+      ok: false,
+      error: err,
+    };
+  }
 }
 
-export async function moveFile(oldPath, newPath) {
+
+export function moveFile(oldPath, newPath) {
     fs.rename(oldPath, newPath, (err) => {
         if(err) {
             console.error(err);
@@ -71,20 +81,24 @@ export async function moveFile(oldPath, newPath) {
     });
 }
 
-export function readFileData(filename) {
-  return new Promise((resolve, reject) => {
-    fs.readFile(path.resolve(filename), 'utf8', (err, data) => {
-      if (err) return reject(err);
-      resolve(data);
-    });
-  });
+export function readFileData(filePath) {
+  return fs.readFileSync(filePath, 'utf8');
 }
 
 export async function copyFile(sourceFile, destinationFile) {
-  
   try {
     await copyFileSafe(sourceFile, destinationFile, constants.COPYFILE_EXCL);
   } catch {
     console.error("The file could not be opened, file already exist");
   }
+}
+
+export function isFile(filePath) {
+  const stat = fs.statSync(filePath);
+  return stat.isFile();
+}
+
+export function isDirectory(dirPath) {
+  const stat = fs.statSync(dirPath);
+  return stat.isDirectory();
 }

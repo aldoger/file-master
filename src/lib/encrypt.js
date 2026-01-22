@@ -8,27 +8,40 @@ export const Algo = [
     "aes256"
 ]
 
-export async function encyrptFile(algorithm, message, filename) { 
-    var size;
+export function encryptFile(algorithm, message) { 
+    let keySize;
+   
+    switch (algorithm) {
+      case 'aes128':
+        keySize = 16;
+        break;
+      case 'aes192':
+        keySize = 24;
+        break;
+      case 'aes256':
+        keySize = 32;
+        break;
+      default:
+        algorithm = 'aes128';
+        keySize = 16;
+        break;
+    }
 
-    if(algorithm.includes("128")) size = 16;
-    if(algorithm.includes("192")) size = 24;
-    if(algorithm.includes("256")) size = 32;
-
-    const key = randomBytes(size);
+    const key = randomBytes(keySize);
     const iv = randomBytes(16);
 
     const cipher = createCipheriv(algorithm, key, iv);
     
-    const secretData = { key: key.toString('hex'), iv: iv.toString('hex'), algo: algorithm };
-    
-    const secretDataString = JSON.stringify(secretData);
-    
-    await makeFile(secretDataString, 'txt', `${filename}_secret`);
+    const encryptedMessage = cipher.update(message, 'utf8', 'hex') + cipher.final('hex');
 
-    const encyrptedMessage = cipher.update(message, 'utf8', 'hex') + cipher.final('hex');
-
-    await makeFile(encyrptedMessage, 'enc', filename);
+    return {
+        secretData: JSON.stringify({
+        key: key.toString('hex'),
+        iv: iv.toString('hex'),
+        algo: algorithm,
+    }),
+        encryptData: encryptedMessage
+    };
 }
 
 export function decyrptFile(algorithm, key, iv, message) {
@@ -41,21 +54,11 @@ export function decyrptFile(algorithm, key, iv, message) {
     try {
         const decyrptMessage = decipher.update(message, 'hex', 'utf8') + decipher.final('utf8');
 
-        console.log("\n" + chalk.green("=== Decyrpt Message ==="));
-        console.info(decyrptMessage)
-        console.log(chalk.green("===================\n"));
+        return decyrptMessage;
     } catch (err) {
-        
         if(err === "ERR_OSSL_BAD_DECRYPT") {
             console.info(chalk.red("Bad decrypt: wrong key or IV"));
+            process.exit(1);
         }
     }
-}
-
-export function encryptImage() {
-    
-}
-
-export function decryptImage() {
-
 }

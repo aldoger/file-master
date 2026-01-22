@@ -1,6 +1,6 @@
 import chalk from "chalk";
 
-async function intro() {
+export default async function info() {
   const figlet = await import("figlet");
   const gradient = (await import("gradient-string")).default;
 
@@ -26,24 +26,18 @@ async function intro() {
         console.log(chalk.yellowBright("✨ Features:"));
         console.log(
           chalk.greenBright(`
-  ▸ ${chalk.white("create/Make")} new files and directories effortlessly.
-  ▸ ${chalk.white("read")} read file content right from the terminal.
-  ▸ ${chalk.white("copy paste")} copy files safely.
-  ▸ ${chalk.white("move")} Move files between directories instantly.
-  ▸ ${chalk.white("encyrpt")} Encyrpt your file.
-  ▸ ${chalk.white("decyrpt")} Decyrpt your file.
-  ▸ ${chalk.white("compress")} Compress file
-  ▸ ${chalk.white("zip")} Zip files
-  ▸ ${chalk.white("download file")} Download file (image, Spotify, megafile, google drive) 
+  ▸ ${chalk.white("encyrpt")} Encyrpt a file.
+  ▸ ${chalk.white("decyrpt")} Decyrpt a file.
+  ▸ ${chalk.white("compress")} Compress a file
+  ▸ ${chalk.white("zip")} Zip files or folder
+  ▸ ${chalk.white("convert")} Convert Docs file to PDF or vice versa (development)
+  ▸ ${chalk.white("download file")} Download files/videos from internet (youtube, google drive, spotify, random image/videos, mega)
         `)
         );
 
-        console.log(chalk.redBright("Press (Esc, CTRL + C, CTRL + D) to stop"));
         console.log(chalk.gray("──────────────────────────────────────────────"));
         resolve();
       }
     );
   });
 }
-
-export default intro;
