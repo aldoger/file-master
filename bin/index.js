@@ -129,20 +129,20 @@ async function encyrpt(filePath, options) {
     }
 }
 
-async function decrypt(filePath, options) {
+async function decrypt(encryptPath, options) {
     processMessage('decrypting...');
 
-    
-    const algo = options.algo;
-    const key = options.key;
-    const iv = options.iv;
+    const encryptMsg = readFileData(encryptPath);
 
-    const decyrptMessage = decyrptFile(algo, key, iv);
+    const secretDataJSON = readFileData(options.secret);
+
+    const secretData = JSON.parse(secretDataJSON);
+
+    const decyrptMessage = decyrptFile(secretData.algo, secretData.key, secretData.iv, encryptMsg);
     console.log("\n" + chalk.green("=== Decyrpt Message ==="));
     console.info(decyrptMessage)
     console.log(chalk.green("===================\n"));
 
-    successMessage('decrypt success');
     process.exit(1);
 }
 
@@ -258,6 +258,19 @@ async function main() {
         'encrypt your file', 
         '<filePath>', 'path to your file you want to encrypt',
         encryptOpt, encyrpt
+    );
+    
+    // decrypt file
+    const decryptOpt = [
+        {
+            flag: '--secret <secret>',
+            description: 'path to secret file containe secret metadata of encrypted file'
+        }
+    ]
+
+    AddProgram('decrypt', 
+        'decrypt file', '<encryptPath>', 'file path of your encrypted file',
+        decryptOpt, decrypt
     );
 
     // convert docs to pdf
