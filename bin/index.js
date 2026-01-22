@@ -2,15 +2,17 @@
 import chalk from 'chalk';
 import { AddProgram, FileMasterProgram } from '../src/config/program.js';
 import { downloadFromInternet, downloadGDriveFile, downloadMegaFile, downloadSpotifyMusic, downloadTiktokVideos, downloadYoutubeVideos, Media } from '../src/lib/download.js';
-import { decyrptFile, encyrptFile } from '../src/lib/encrypt.js';
+import { decyrptFile, encryptFile } from '../src/lib/encrypt.js';
 import { isDirectory, isFile, makeFile, readFileData } from '../src/lib/file.js';
 import info from '../src/utils/info.js';
 import { errorMessage, processMessage, successMessage } from '../src/utils/message.js';
 import process from 'process';
 import { zipFiles, zipFolders } from '../src/lib/archive.js';
-import { convertDocsToPDF } from '../src/lib/convert.js';
 import path from 'path';
-import { streamFromString, readInput } from '../src/utils/stream.js';
+import { convertDocsToPDF } from '../src/lib/convert.js';
+import { streamFromString, readInput } from '../src/utils/stream.js'; 
+
+const __dirname = process.cwd();
 
 async function download(url, options) {
 
@@ -98,17 +100,18 @@ async function download(url, options) {
 
 async function encyrpt(filePath, options) {
     processMessage('encrypting...');
-    
-    const dirName = process.cwd();
 
-    console.log(dirName);
+    if(options.name == '' || options.name == null) {
+      errorMessage("name for the encrypted must be filled");
+      process.exit(1);
+  }
 
-    const encFilePath = path.join(dirName, options.name);
-    const secretFilePath = path.join(dirName, `${options.name}_secret.txt`)
+    const encFilePath = path.join(__dirname, options.name);
+    const secretFilePath = path.join(__dirname, `${options.name}_secret.txt`)
 
     try {
         const data = readFileData(filePath);
-        const encrypt = encyrptFile(options.algo, data);
+        const encrypt = encryptFile(options.algo, data);
 
         const encData = streamFromString(encrypt.encryptData);
 
