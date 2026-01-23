@@ -1,9 +1,11 @@
 import { gdrive, spotify, youtube, ttdl } from 'btch-downloader';
 import { File } from 'megajs';
 import os from 'os';
+import fs, { read } from 'fs';
 import path from 'path';
 import { checkAndMakeDir, makeFile } from './file.js';
 import { Readable } from 'stream';
+import { pipeline } from 'stream/promises';
 
 export const Media = {
   INTERNET: 'internet',
@@ -12,6 +14,41 @@ export const Media = {
   GDRIVE: 'gdrive',
   SPOTIFY: 'spotify',
   TIKTOK: 'tiktok'
+}
+
+function getOptimalMegaChunkConfig(fileSize) {
+  const KB = 1024;
+  const MB = 1024 * KB;
+
+  if (fileSize <= 0 || !Number.isFinite(fileSize)) {
+    // fallback safe default
+    return {
+      initialChunkSize: 256 * KB,
+      chunkSizeIncrement: 256 * KB
+    };
+  }
+
+  // Small files (< 256 KB)
+  if (fileSize < 256 * KB) {
+    return {
+      initialChunkSize: 128 * KB,
+      chunkSizeIncrement: 0
+    };
+  }
+
+  // Large files (5 MB – 100 MB)
+  if (fileSize < 100 * MB) {
+    return {
+      initialChunkSize: 512 * KB,
+      chunkSizeIncrement: 512 * KB
+    };
+  }
+
+  // Very large files (> 100 MB)
+  return {
+    initialChunkSize: 1 * MB,
+    chunkSizeIncrement: 1 * MB
+  };
 }
 
 const userHomeDir = checkAndMakeDir(`${os.homedir}/Downloads`);
@@ -66,23 +103,35 @@ export async function downloadFromInternet(url) {
 }
 
 export async function downloadMegaFile(megaFileLink) {
+
+
   try {
     const file = File.fromURL(megaFileLink);
-    await file.loadAttributes();
 
-    const filePath = path.join(userHomeDir, file.name);
+    const data = await file.loadAttributes();
 
-    const readStream = file.download(); 
+    const chunkConfig = getOptimalMegaChunkConfig(data.size);
 
-    const result = await makeFile(readStream, filePath);
+    const opt = {
+      initialChunkSize: chunkConfig.initialChunkSize,
+      chunkSizeIncrement: chunkConfig.chunkSizeIncrement,
+      forceHttps: true
+    };
 
-    if(!result.ok) return returnFailure(result.error);
+    const filePath = path.join(userHomeDir, data.name);
+
+    await pipeline(
+      data.download(opt),
+      fs.createWriteStream(filePath)
+    );
 
     return returnSuccess(filePath);
+
   } catch (err) {
     return returnFailure(err);
   }
 }
+
 
 export async function downloadGDriveFile(driveLink) {
   try {
