@@ -16,6 +16,41 @@ export const Media = {
   TIKTOK: 'tiktok'
 }
 
+function getOptimalMegaChunkConfig(fileSize) {
+  const KB = 1024;
+  const MB = 1024 * KB;
+
+  if (fileSize <= 0 || !Number.isFinite(fileSize)) {
+    // fallback safe default
+    return {
+      initialChunkSize: 256 * KB,
+      chunkSizeIncrement: 256 * KB
+    };
+  }
+
+  // Small files (< 256 KB)
+  if (fileSize < 256 * KB) {
+    return {
+      initialChunkSize: 128 * KB,
+      chunkSizeIncrement: 0
+    };
+  }
+
+  // Large files (5 MB – 100 MB)
+  if (fileSize < 100 * MB) {
+    return {
+      initialChunkSize: 512 * KB,
+      chunkSizeIncrement: 512 * KB
+    };
+  }
+
+  // Very large files (> 100 MB)
+  return {
+    initialChunkSize: 1 * MB,
+    chunkSizeIncrement: 1 * MB
+  };
+}
+
 const userHomeDir = checkAndMakeDir(`${os.homedir}/Downloads`);
 
 function returnFailure(err) {
@@ -69,21 +104,24 @@ export async function downloadFromInternet(url) {
 
 export async function downloadMegaFile(megaFileLink) {
 
-  const opt = {
-    initialChunkSize: 256 * 1024,
-    chunkSizeIncrement: 256 * 1024,
-    forceHttps: true
-  }
 
   try {
     const file = File.fromURL(megaFileLink);
+
     const data = await file.loadAttributes();
 
-    const readable = await data.download(opt);
+    const chunkConfig = getOptimalMegaChunkConfig(data.size);
+
+    const opt = {
+      initialChunkSize: chunkConfig.initialChunkSize,
+      chunkSizeIncrement: chunkConfig.chunkSizeIncrement,
+      forceHttps: true
+    };
+
     const filePath = path.join(userHomeDir, data.name);
 
     await pipeline(
-      readable,
+      data.download(opt),
       fs.createWriteStream(filePath)
     );
 
@@ -92,7 +130,6 @@ export async function downloadMegaFile(megaFileLink) {
   } catch (err) {
     return returnFailure(err);
   }
-
 }
 
 
