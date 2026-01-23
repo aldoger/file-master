@@ -1,9 +1,11 @@
 import { gdrive, spotify, youtube, ttdl } from 'btch-downloader';
 import { File } from 'megajs';
 import os from 'os';
+import fs, { read } from 'fs';
 import path from 'path';
 import { checkAndMakeDir, makeFile } from './file.js';
 import { Readable } from 'stream';
+import { pipeline } from 'stream/promises';
 
 export const Media = {
   INTERNET: 'internet',
@@ -66,23 +68,33 @@ export async function downloadFromInternet(url) {
 }
 
 export async function downloadMegaFile(megaFileLink) {
+
+  const opt = {
+    initialChunkSize: 256 * 1024,
+    chunkSizeIncrement: 256 * 1024,
+    forceHttps: true
+  }
+
   try {
     const file = File.fromURL(megaFileLink);
-    await file.loadAttributes();
+    const data = await file.loadAttributes();
 
-    const filePath = path.join(userHomeDir, file.name);
+    const readable = await data.download(opt);
+    const filePath = path.join(userHomeDir, data.name);
 
-    const readStream = file.download(); 
-
-    const result = await makeFile(readStream, filePath);
-
-    if(!result.ok) return returnFailure(result.error);
+    await pipeline(
+      readable,
+      fs.createWriteStream(filePath)
+    );
 
     return returnSuccess(filePath);
+
   } catch (err) {
     return returnFailure(err);
   }
+
 }
+
 
 export async function downloadGDriveFile(driveLink) {
   try {
