@@ -167,7 +167,7 @@ export async function downloadSpotifyMusic(spotifyLink) {
     const fileName = spotifyMusic.result.title;
     const filePath = path.join(userHomeDir, fileName);
 
-    const response = await fetch(spotifyMusic.result.source);
+    const response = await fetch(spotifyMusic.result.formats[0].url);
 
     const stream = Readable.fromWeb(response.body);
 
