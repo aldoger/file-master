@@ -31,7 +31,7 @@ export default async function info() {
   ▸ ${chalk.white("compress")} Compress a file
   ▸ ${chalk.white("zip")} Zip files or folder
   ▸ ${chalk.white("convert")} Convert Docs file to PDF or vice versa (development)
-  ▸ ${chalk.white("download file")} Download files/videos from internet (youtube, google drive, spotify, random image/videos, mega)
+  ▸ ${chalk.white("download file/videos")} Download files/videos from internet (youtube, google drive, spotify, random image/videos, mega)
         `)
         );
 
