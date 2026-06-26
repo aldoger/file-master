@@ -1,20 +1,20 @@
-import { gdrive, spotify, youtube, ttdl } from 'btch-downloader';
-import { File } from 'megajs';
-import os from 'os';
-import fs, { read } from 'fs';
-import path from 'path';
-import { checkAndMakeDir, makeFile } from './file.js';
-import { Readable } from 'stream';
-import { pipeline } from 'stream/promises';
+import { gdrive, spotify, youtube, ttdl } from "btch-downloader";
+import { File } from "megajs";
+import os from "os";
+import fs, { read } from "fs";
+import path from "path";
+import { checkAndMakeDir, makeFile } from "./file.js";
+import { Readable } from "stream";
+import { pipeline } from "stream/promises";
 
-export const Media = {
-  INTERNET: 'internet',
-  YOUTUBE: 'youtube',
-  MEGA: 'mega',
-  GDRIVE: 'gdrive',
-  SPOTIFY: 'spotify',
-  TIKTOK: 'tiktok'
-}
+export const MEDIA = {
+  INTERNET: "internet",
+  YOUTUBE: "youtube",
+  MEGA: "mega",
+  GDRIVE: "gdrive",
+  SPOTIFY: "spotify",
+  TIKTOK: "tiktok",
+};
 
 function getOptimalMegaChunkConfig(fileSize) {
   const KB = 1024;
@@ -24,7 +24,7 @@ function getOptimalMegaChunkConfig(fileSize) {
     // fallback safe default
     return {
       initialChunkSize: 256 * KB,
-      chunkSizeIncrement: 256 * KB
+      chunkSizeIncrement: 256 * KB,
     };
   }
 
@@ -32,7 +32,7 @@ function getOptimalMegaChunkConfig(fileSize) {
   if (fileSize < 256 * KB) {
     return {
       initialChunkSize: 128 * KB,
-      chunkSizeIncrement: 0
+      chunkSizeIncrement: 0,
     };
   }
 
@@ -40,14 +40,14 @@ function getOptimalMegaChunkConfig(fileSize) {
   if (fileSize < 100 * MB) {
     return {
       initialChunkSize: 512 * KB,
-      chunkSizeIncrement: 512 * KB
+      chunkSizeIncrement: 512 * KB,
     };
   }
 
   // Very large files (> 100 MB)
   return {
     initialChunkSize: 1 * MB,
-    chunkSizeIncrement: 1 * MB
+    chunkSizeIncrement: 1 * MB,
   };
 }
 
@@ -56,26 +56,26 @@ const userHomeDir = checkAndMakeDir(`${os.homedir}/Downloads`);
 function returnFailure(err) {
   return {
     ok: false,
-    error: err.message
-  }
-};
+    error: err.message,
+  };
+}
 
 function returnSuccess(path) {
   return {
     ok: true,
-    path: path
-  }
-};
+    path: path,
+  };
+}
 
 function getFileName(url, res) {
-  const disposition = res.headers.get('content-disposition');
+  const disposition = res.headers.get("content-disposition");
 
-  if (disposition && disposition.includes('filename=')) {
-    return disposition.split('filename=')[1].replace(/"/g, '');
+  if (disposition && disposition.includes("filename=")) {
+    return disposition.split("filename=")[1].replace(/"/g, "");
   }
 
   const pathname = new URL(url).pathname;
-  return path.basename(pathname) 
+  return path.basename(pathname);
 }
 
 export async function downloadFromInternet(url) {
@@ -103,8 +103,6 @@ export async function downloadFromInternet(url) {
 }
 
 export async function downloadMegaFile(megaFileLink) {
-
-
   try {
     const file = File.fromURL(megaFileLink);
 
@@ -115,42 +113,41 @@ export async function downloadMegaFile(megaFileLink) {
     const opt = {
       initialChunkSize: chunkConfig.initialChunkSize,
       chunkSizeIncrement: chunkConfig.chunkSizeIncrement,
-      forceHttps: true
+      forceHttps: true,
     };
 
     const filePath = path.join(userHomeDir, data.name);
 
-    await pipeline(
-      data.download(opt),
-      fs.createWriteStream(filePath)
-    );
+    await pipeline(data.download(opt), fs.createWriteStream(filePath));
 
     return returnSuccess(filePath);
-
   } catch (err) {
     return returnFailure(err);
   }
 }
 
-
 export async function downloadGDriveFile(driveLink) {
   try {
     const gDriveFile = await gdrive(driveLink);
 
-    if(!gDriveFile.status) return returnFailure(new Error("failed to fetch google drive link"));
+    if (!gDriveFile.status)
+      return returnFailure(new Error("failed to fetch google drive link"));
 
     const fileName = gDriveFile.result.filename;
     const filePath = path.join(userHomeDir, fileName);
 
     const response = await fetch(gDriveFile.result.downloadUrl);
 
-    if(!response.ok) return returnFailure(new Error(`failed to fetch: ${response.statusText}`));
+    if (!response.ok)
+      return returnFailure(
+        new Error(`failed to fetch: ${response.statusText}`),
+      );
 
     const stream = Readable.fromWeb(response.body);
 
     const result = await makeFile(stream, filePath);
 
-    if(!result.ok) return returnFailure(result.error);
+    if (!result.ok) return returnFailure(result.error);
 
     return returnSuccess(filePath);
   } catch (err) {
@@ -162,7 +159,8 @@ export async function downloadSpotifyMusic(spotifyLink) {
   try {
     const spotifyMusic = await spotify(spotifyLink);
 
-    if(!spotifyMusic.status) return returnFailure(new Error("failed to fetch spotify link"));
+    if (!spotifyMusic.status)
+      return returnFailure(new Error("failed to fetch spotify link"));
 
     const fileName = spotifyMusic.result.title;
     const filePath = path.join(userHomeDir, fileName);
@@ -173,8 +171,8 @@ export async function downloadSpotifyMusic(spotifyLink) {
 
     const result = await makeFile(stream, filePath);
 
-    if(!result.ok) return returnFailure(result.error);
-    
+    if (!result.ok) return returnFailure(result.error);
+
     return returnSuccess(filePath);
   } catch (err) {
     return returnFailure(err);
@@ -185,13 +183,14 @@ export async function downloadYoutubeVideos(ytLink, isMP3) {
   try {
     const ytVid = await youtube(ytLink);
 
-    if(!ytVid.status) return returnFailure(new Error("failed to fetch youtube link"));
+    if (!ytVid.status)
+      return returnFailure(new Error("failed to fetch youtube link"));
 
     const fileName = ytVid.title;
     const filePath = path.join(userHomeDir, fileName);
 
     let ytMedia;
-    if(isMP3) ytMedia = ytVid.mp3;
+    if (isMP3) ytMedia = ytVid.mp3;
     else ytMedia = ytVid.mp4;
 
     const response = await fetch(ytMedia);
@@ -200,7 +199,7 @@ export async function downloadYoutubeVideos(ytLink, isMP3) {
 
     const result = await makeFile(stream, filePath);
 
-    if(!result.ok) return returnFailure(result.error);
+    if (!result.ok) return returnFailure(result.error);
 
     return returnSuccess(filePath);
   } catch (err) {
@@ -212,15 +211,14 @@ export async function downloadTiktokVideos(tiktokLink) {
   try {
     const tiktokVid = await ttdl(tiktokLink);
 
-    if(!tiktokVid.status) return returnFailure("failed to fetch tiktok link");
+    if (!tiktokVid.status) return returnFailure("failed to fetch tiktok link");
 
     console.log(tiktokVid);
 
-    return returnSuccess('wait');
+    return returnSuccess("wait");
 
     const fileName = tiktokVid.title;
     const filePath = path.join(userHomeDir, fileName);
-
   } catch (err) {
     return returnFailure(err);
   }

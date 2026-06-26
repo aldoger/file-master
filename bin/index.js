@@ -8,7 +8,7 @@ import {
   downloadSpotifyMusic,
   downloadTiktokVideos,
   downloadYoutubeVideos,
-  Media,
+  MEDIA,
 } from "../src/lib/download.js";
 import { decyrptFile, encryptFile } from "../src/lib/encrypt.js";
 import {
@@ -28,6 +28,7 @@ import { zipFiles, zipFolders } from "../src/lib/archive.js";
 import path from "path";
 import { convertDocsToPDF } from "../src/lib/convert.js";
 import { streamFromString, readInput } from "../src/utils/stream.js";
+import { sendToWhatsapp, PLATFORM } from "../src/lib/send.js";
 
 const __dirname = process.cwd();
 
@@ -36,7 +37,7 @@ async function download(url, options) {
   let downloadPath;
   try {
     switch (options.media) {
-      case Media.YOUTUBE:
+      case MEDIA.YOUTUBE:
         let isMp3;
         let input = await readInput("do you want to download mp3? (Y/N) ");
 
@@ -55,7 +56,7 @@ async function download(url, options) {
 
         downloadPath = resultYt.path;
         break;
-      case Media.INTERNET:
+      case MEDIA.INTERNET:
         const resultIn = await downloadFromInternet(url);
         if (!resultIn.ok) {
           errorMessage(`Error download: ${resultIn.error}`);
@@ -73,7 +74,7 @@ async function download(url, options) {
 
         downloadPath = resultGD.path;
         break;
-      case Media.MEGA:
+      case MEDIA.MEGA:
         const resultMEG = await downloadMegaFile(url);
         if (!resultMEG.ok) {
           errorMessage(`Error download: ${resultMEG.error}`);
@@ -82,7 +83,7 @@ async function download(url, options) {
 
         downloadPath = resultMEG.path;
         break;
-      case Media.SPOTIFY:
+      case MEDIA.SPOTIFY:
         const resultSPO = await downloadSpotifyMusic(url);
         if (!resultSPO.ok) {
           errorMessage(`Error download: ${resultSPO.error}`);
@@ -92,7 +93,7 @@ async function download(url, options) {
         downloadPath = resultSPO.path;
         break;
 
-      case Media.TIKTOK:
+      case MEDIA.TIKTOK:
         const resultTik = await downloadTiktokVideos(url);
         if (!resultTik.ok) {
           errorMessage(`Error download: ${resultTik.error}`);
@@ -217,7 +218,24 @@ async function convert(file, options) {
   process.exit(0);
 }
 
-async function send(filePath, platform) {}
+async function send(filePath, phoneNumber, platform) {
+  processMessage("Sending...");
+
+  let result;
+
+  switch (platform) {
+    case PLATFORM.WHATSSAPP:
+      result = await sendToWhatsapp(phoneNumber, filePath);
+      break;
+  }
+
+  if (result == typeof Error) {
+    errorMessage("Cannot send file: ", result.message);
+    return;
+  }
+
+  successMessage("File sent successfully");
+}
 
 async function main() {
   // info filemaster application

@@ -1,6 +1,8 @@
 import { MessageMedia, Client } from "whatsapp-web.js";
 
-export async function sendToEmail(email, filepath) {}
+export const PLATFORM = {
+  WHATSSAPP: "whatsapp",
+};
 
 export async function sendToWhatsapp(phoneNumber, filePath) {
   const client = new Client();
@@ -8,6 +10,7 @@ export async function sendToWhatsapp(phoneNumber, filePath) {
   try {
     const media = MessageMedia.fromFilePath(filePath);
     await client.sendMessage(phoneNumber, media);
+    return null;
   } catch (e) {
     return e;
   }
